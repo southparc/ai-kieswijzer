@@ -1,14 +1,64 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { LandingPage } from "@/components/LandingPage";
+import { QuizInterface, Answer } from "@/components/QuizInterface";
+import { ResultsPage } from "@/components/ResultsPage";
+import { questions } from "@/data/questions";
+import { parties } from "@/data/parties";
+import { calculateResults } from "@/utils/calculateResults";
+
+type AppState = "landing" | "quiz" | "results";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [appState, setAppState] = useState<AppState>("landing");
+  const [answers, setAnswers] = useState<Record<number, Answer>>({});
+  const [results, setResults] = useState<any[]>([]);
+
+  const handleStartQuiz = () => {
+    setAppState("quiz");
+    setAnswers({});
+  };
+
+  const handleQuizComplete = (userAnswers: Record<number, Answer>) => {
+    setAnswers(userAnswers);
+    const calculatedResults = calculateResults(userAnswers, parties);
+    setResults(calculatedResults);
+    setAppState("results");
+  };
+
+  const handleRestart = () => {
+    setAppState("landing");
+    setAnswers({});
+    setResults([]);
+  };
+
+  const handleBackToLanding = () => {
+    setAppState("landing");
+  };
+
+  switch (appState) {
+    case "landing":
+      return <LandingPage onStart={handleStartQuiz} />;
+    
+    case "quiz":
+      return (
+        <QuizInterface 
+          questions={questions}
+          onComplete={handleQuizComplete}
+          onBack={handleBackToLanding}
+        />
+      );
+    
+    case "results":
+      return (
+        <ResultsPage 
+          results={results}
+          onRestart={handleRestart}
+        />
+      );
+    
+    default:
+      return <LandingPage onStart={handleStartQuiz} />;
+  }
 };
 
 export default Index;
