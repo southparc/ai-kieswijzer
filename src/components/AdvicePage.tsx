@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 
@@ -21,6 +21,11 @@ interface Source {
 interface AdviceResult {
   answer: string;
   sources: Source[];
+}
+
+interface DocumentStats {
+  docCount: number;
+  lastUpdate: string;
 }
 
 const themes = [
@@ -42,6 +47,12 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdviceResult | null>(null);
+  const [stats, setStats] = useState<DocumentStats>({ docCount: 0, lastUpdate: "" });
+
+  useEffect(() => {
+    // Set fallback stats for now
+    setStats({ docCount: 25, lastUpdate: '27-08-2025' });
+  }, []);
 
   const handleCompare = async () => {
     if (!question.trim()) return;
@@ -150,13 +161,13 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
             {/* Answer */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Resultaat</h2>
-              <div className="prose prose-slate max-w-none">
+              <div className="prose prose-slate max-w-none compact-bullets">
                 <ReactMarkdown>{result.answer}</ReactMarkdown>
               </div>
             </Card>
 
             {/* Sources */}
-            {result.sources.length > 0 && (
+            {result.sources && result.sources.length > 0 && (
               <Card className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Bronnen</h2>
                 <Table>
@@ -173,14 +184,15 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
                         <TableCell className="font-medium">{source.party}</TableCell>
                         <TableCell>{source.page}</TableCell>
                         <TableCell>
-                          <a 
-                            href={source.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(source.url, '_blank')}
+                            className="gap-2"
                           >
+                            <ExternalLink className="h-4 w-4" />
                             Bekijk document
-                          </a>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -190,6 +202,12 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
             )}
           </div>
         )}
+
+        {/* Footer */}
+        <div className="mt-12 text-center text-sm text-muted-foreground border-t pt-6">
+          Laatste update: {stats.lastUpdate} · Documenten: {stats.docCount} · 
+          Geen stemadvies; alleen bronvergelijking
+        </div>
       </div>
     </div>
   );

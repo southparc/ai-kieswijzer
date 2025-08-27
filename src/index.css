@@ -111,3 +111,13 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Compact bullet styling */
+.compact-bullets ul > li {
+  line-height: 1.4em;
+  margin-bottom: 0.35em;
+}
+
+.compact-bullets ul {
+  margin-bottom: 1em;
+}
