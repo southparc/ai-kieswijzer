@@ -1,63 +1,55 @@
 import { useState } from "react";
 import { LandingPage } from "@/components/LandingPage";
-import { QuizInterface, Answer } from "@/components/QuizInterface";
-import { ResultsPage } from "@/components/ResultsPage";
-import { questions } from "@/data/questions";
-import { parties } from "@/data/parties";
-import { calculateResults } from "@/utils/calculateResults";
+import { AdvicePage } from "@/components/AdvicePage";
+import { AdminPage } from "@/components/AdminPage";
 
-type AppState = "landing" | "quiz" | "results";
+type AppState = "landing" | "advice" | "admin";
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>("landing");
-  const [answers, setAnswers] = useState<Record<number, Answer>>({});
-  const [results, setResults] = useState<any[]>([]);
 
-  const handleStartQuiz = () => {
-    setAppState("quiz");
-    setAnswers({});
-  };
-
-  const handleQuizComplete = (userAnswers: Record<number, Answer>) => {
-    setAnswers(userAnswers);
-    const calculatedResults = calculateResults(userAnswers, parties);
-    setResults(calculatedResults);
-    setAppState("results");
-  };
-
-  const handleRestart = () => {
-    setAppState("landing");
-    setAnswers({});
-    setResults([]);
+  const handleStart = () => {
+    setAppState("advice");
   };
 
   const handleBackToLanding = () => {
     setAppState("landing");
   };
 
+  const handleGoToAdmin = () => {
+    setAppState("admin");
+  };
+
+  // Check for admin access via URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const showAdmin = urlParams.get('admin') === 'true';
+
   switch (appState) {
     case "landing":
-      return <LandingPage onStart={handleStartQuiz} />;
-    
-    case "quiz":
       return (
-        <QuizInterface 
-          questions={questions}
-          onComplete={handleQuizComplete}
-          onBack={handleBackToLanding}
-        />
+        <div>
+          <LandingPage onStart={handleStart} />
+          {showAdmin && (
+            <div className="fixed bottom-4 right-4">
+              <button
+                onClick={handleGoToAdmin}
+                className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700"
+              >
+                Admin
+              </button>
+            </div>
+          )}
+        </div>
       );
     
-    case "results":
-      return (
-        <ResultsPage 
-          results={results}
-          onRestart={handleRestart}
-        />
-      );
+    case "advice":
+      return <AdvicePage onBack={handleBackToLanding} />;
+    
+    case "admin":
+      return <AdminPage onBack={handleBackToLanding} />;
     
     default:
-      return <LandingPage onStart={handleStartQuiz} />;
+      return <LandingPage onStart={handleStart} />;
   }
 };
 
