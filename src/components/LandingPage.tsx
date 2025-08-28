@@ -15,7 +15,7 @@ export const LandingPage = ({
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                Nederlandse{" "}
+                Nederlandse<br />
                 <span className="bg-gradient-primary bg-clip-text text-transparent">
                   AI Kieswijzer
                 </span>
