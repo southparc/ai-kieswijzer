@@ -2,14 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import heroImage from "@/assets/hero-democracy.jpg";
 import { Info, Shield, Clock } from "lucide-react";
-
 interface LandingPageProps {
   onStart: () => void;
 }
-
-export const LandingPage = ({ onStart }: LandingPageProps) => {
-  return (
-    <div className="min-h-screen bg-gradient-background">
+export const LandingPage = ({
+  onStart
+}: LandingPageProps) => {
+  return <div className="min-h-screen bg-gradient-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="container mx-auto px-4 py-16">
@@ -21,26 +20,16 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
                   Kieswijzer
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                Krijg gepersonaliseerd politiek advies op basis van AI-analyse van 
-                alle partijprogramma's. Stel vragen over zorg, wonen, klimaat en meer.
-              </p>
+              <p className="text-xl text-muted-foreground leading-relaxed">Hier verschijnt 1 september de experimentele AI-Kieswijzer.
+Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijprogramma's. Stel vragen over zorg, wonen, klimaat en meer.</p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg" 
-                  className="text-lg px-8 py-6"
-                  onClick={onStart}
-                >
+                <Button size="lg" className="text-lg px-8 py-6" onClick={onStart}>
                   Start Kieswijzer
                 </Button>
               </div>
             </div>
             <div className="relative">
-              <img 
-                src={heroImage}
-                alt="Nederlandse democratie - stemmen en verkiezingen"
-                className="w-full h-auto rounded-2xl shadow-elegant"
-              />
+              <img src={heroImage} alt="Nederlandse democratie - stemmen en verkiezingen" className="w-full h-auto rounded-2xl shadow-elegant" />
             </div>
           </div>
         </div>
@@ -77,6 +66,5 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
