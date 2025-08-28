@@ -17,7 +17,7 @@ export const LandingPage = ({
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Nederlandse{" "}
                 <span className="bg-gradient-primary bg-clip-text text-transparent">
-                  Kieswijzer
+                  AI Kieswijzer
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">Hier verschijnt 1 september de experimentele AI-Kieswijzer.
