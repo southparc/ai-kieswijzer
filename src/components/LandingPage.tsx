@@ -13,22 +13,22 @@ export const LandingPage = ({
   return <div className="min-h-screen bg-gradient-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="container mx-auto px-4 py-16">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
+        <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="space-y-6 sm:space-y-8">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
                 Nederlandse<br />
                 <span className="bg-gradient-primary bg-clip-text text-transparent">
                   AI Kieswijzer
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground leading-relaxed">Hier verschijnt begin september de experimentele AI-Kieswijzer.
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Hier verschijnt begin september de experimentele AI-Kieswijzer.
 Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijprogramma's. Stel vragen over zorg, wonen, klimaat en meer.</p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="text-lg px-8 py-6" onClick={onStart}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
                   AI Advies
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6" onClick={onStartQuiz}>
+                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStartQuiz}>
                   Stemwijzer Quiz
                 </Button>
               </div>
