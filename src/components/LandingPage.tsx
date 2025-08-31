@@ -4,9 +4,11 @@ import heroImage from "@/assets/hero-democracy.jpg";
 import { Info, Shield, Clock } from "lucide-react";
 interface LandingPageProps {
   onStart: () => void;
+  onStartQuiz: () => void;
 }
 export const LandingPage = ({
-  onStart
+  onStart,
+  onStartQuiz
 }: LandingPageProps) => {
   return <div className="min-h-screen bg-gradient-background">
       {/* Hero Section */}
@@ -24,7 +26,10 @@ export const LandingPage = ({
 Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijprogramma's. Stel vragen over zorg, wonen, klimaat en meer.</p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="text-lg px-8 py-6" onClick={onStart}>
-                  Start Kieswijzer
+                  AI Advies
+                </Button>
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6" onClick={onStartQuiz}>
+                  Stemwijzer Quiz
                 </Button>
               </div>
             </div>
