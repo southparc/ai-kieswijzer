@@ -33,10 +33,10 @@ All colors MUST be HSL.
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    /* Dutch flag colors */
-    --dutch-red: 356 74% 38%;
+    /* Dutch flag colors - Official colors */
+    --dutch-red: 350 83% 42%;
     --dutch-red-foreground: 0 0% 100%;
-    --dutch-blue: 218 62% 34%;
+    --dutch-blue: 218 100% 32%;
     --dutch-blue-foreground: 0 0% 100%;
 
     --border: 214.3 31.8% 91.4%;
