@@ -25,15 +25,34 @@ serve(async (req) => {
     
     console.log('Received request:', { question, themes, weights, ip });
 
-    // Store the query
+    // Check if user is authenticated
+    const authHeader = req.headers.get('Authorization');
+    let user_id = null;
+    
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (!authError && user) {
+          user_id = user.id;
+        }
+      } catch (authError) {
+        console.log('Auth check failed, proceeding as anonymous:', authError);
+      }
+    }
+
+    // Store the query with optional user_id
+    const queryPayload = {
+      question,
+      themes,
+      weights,
+      ip_hash: ip,
+      ...(user_id && { user_id }) // Only include user_id if authenticated
+    };
+
     const { data: queryData, error: queryError } = await supabase
       .from('queries')
-      .insert({
-        question,
-        themes,
-        weights,
-        ip_hash: ip
-      })
+      .insert(queryPayload)
       .select()
       .single();
 
