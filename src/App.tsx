@@ -21,7 +21,7 @@ const App = () => (
                 <img 
                   src="/lovable-uploads/e0368849-26ad-4222-9b0a-3db3c5a8810a.png" 
                   alt="AI Kieswijzer Logo" 
-                  className="h-[150px] w-auto"
+                  className="h-[100px] w-auto"
                 />
               </a>
             </div>
