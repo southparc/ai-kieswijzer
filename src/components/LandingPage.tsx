@@ -22,7 +22,7 @@ export const LandingPage = ({
                   AI Kieswijzer
                 </span>
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Hier verschijnt begin september de experimentele AI-Kieswijzer.
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer.
 Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijprogramma's. Stel vragen over zorg, wonen, klimaat en meer.</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" variant="dutch-blue" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
