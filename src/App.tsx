@@ -13,13 +13,24 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <div className="min-h-screen flex flex-col">
+        <BrowserRouter>
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <footer className="py-4 px-4 border-t border-border/50 bg-muted/30">
+            <div className="container mx-auto">
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                De AI-kieswijzer is een experiment van Southparc BV - de uitkomst is gebaseerd op de bekende verkiezingsprogramma's en OpenAI en niet gevalideerd.
+              </p>
+            </div>
+          </footer>
+        </BrowserRouter>
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );
