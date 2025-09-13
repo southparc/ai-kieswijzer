@@ -36,7 +36,7 @@ export const calculateResults = (
             });
           } else if (userAnswer === "disagree") {
             matches++;
-            disagreements++;
+            agreements++; // Changed: disagreeing together is also an agreement
             breakdown.push({
               questionId: qId,
               userAnswer,
@@ -64,9 +64,11 @@ export const calculateResults = (
               partyAnswer,
               result: "disagreement"
             });
-          } else {
-            // One is neutral, other has position - very small credit
+          } else if ((userAnswer === "neutral" && partyAnswer !== "neutral") || 
+                     (userAnswer !== "neutral" && partyAnswer === "neutral")) {
+            // One is neutral, other has position - count as minor difference
             matches += 0.1;
+            disagreements++; // Changed: count neutral vs position as disagreement
             breakdown.push({
               questionId: qId,
               userAnswer,

@@ -41,13 +41,14 @@ const PARTY_DESCRIPTIONS: Record<string, string> = {
   'JA21': 'Liberaal-conservatieve partij die zich richt op Nederlandse waarden en normen.',
   'BVNL': 'Partij die zich inzet voor Nederlandse soevereiniteit en democratische waarden.',
   'SGP': 'Staatkundig Gereformeerde Partij met focus op christelijke waarden en traditie.',
-  'DENK': 'Partij die zich inzet voor diversiteit, gelijkwaardigheid en gelijke kansen.'
+  'DENK': 'Partij die zich inzet voor diversiteit, gelijkwaardigheid en gelijke kansen.',
+  '50PLUS': 'Partij die opkomt voor de belangen van 50-plussers en ouderen.'
 };
 
-// Canonical list to guarantee at least 16 parties in the quiz
+// Canonical list to guarantee at least 17 parties in the quiz
 const DEFAULT_PARTY_NAMES = [
   'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
-  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK'
+  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK','50PLUS'
 ];
 
 // Generate default positions for parties based on their political orientation
