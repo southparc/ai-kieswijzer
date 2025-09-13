@@ -16,10 +16,18 @@ export interface DatabaseParty {
   inserted_at: string;
 }
 
+export interface QuestionBreakdown {
+  questionId: number;
+  userAnswer: "agree" | "neutral" | "disagree";
+  partyAnswer: "agree" | "neutral" | "disagree";
+  result: "agreement" | "disagreement" | "neutral_match" | "neutral_partial";
+}
+
 export interface PartyResult {
   party: Party;
   score: number;
   percentage: number;
   agreements: number;
   disagreements: number;
+  breakdown: QuestionBreakdown[];
 }

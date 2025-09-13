@@ -1,15 +1,96 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { RotateCcw, Share2, Download, Trophy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { RotateCcw, Share2, Download, Trophy, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Answer } from "./QuizInterface";
-import { PartyResult } from "@/types/party";
+import { PartyResult, QuestionBreakdown } from "@/types/party";
+import { questions } from "@/data/questions";
 
 interface ResultsPageProps {
   results: PartyResult[];
   onRestart: () => void;
 }
+
+const BreakdownDialog = ({ 
+  breakdown, 
+  partyName, 
+  type 
+}: { 
+  breakdown: QuestionBreakdown[], 
+  partyName: string, 
+  type: 'agreements' | 'disagreements' 
+}) => {
+  const filteredBreakdown = breakdown.filter(item => 
+    type === 'agreements' 
+      ? item.result === 'agreement' 
+      : item.result === 'disagreement'
+  );
+
+  const getAnswerColor = (answer: "agree" | "neutral" | "disagree") => {
+    switch (answer) {
+      case "agree": return "text-green-600";
+      case "disagree": return "text-red-600";
+      case "neutral": return "text-yellow-600";
+    }
+  };
+
+  const getAnswerText = (answer: "agree" | "neutral" | "disagree") => {
+    switch (answer) {
+      case "agree": return "Eens";
+      case "disagree": return "Oneens";
+      case "neutral": return "Neutraal";
+    }
+  };
+
+  return (
+    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>
+          {type === 'agreements' ? 'Overeenkomsten' : 'Verschillen'} met {partyName}
+        </DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4">
+        {filteredBreakdown.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">
+            Geen {type === 'agreements' ? 'overeenkomsten' : 'verschillen'} gevonden.
+          </p>
+        ) : (
+          filteredBreakdown.map((item) => {
+            const question = questions.find(q => q.id === item.questionId);
+            return (
+              <Card key={item.questionId} className="p-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">
+                    {question?.category}
+                  </h4>
+                  <p className="font-semibold">
+                    {question?.statement}
+                  </p>
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Jij: </span>
+                      <span className={getAnswerColor(item.userAnswer)}>
+                        {getAnswerText(item.userAnswer)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{partyName}: </span>
+                      <span className={getAnswerColor(item.partyAnswer)}>
+                        {getAnswerText(item.partyAnswer)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          })
+        )}
+      </div>
+    </DialogContent>
+  );
+};
 
 export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
   const topMatch = results[0];
@@ -43,18 +124,40 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
               {topMatch.party.description}
             </p>
             <div className="flex justify-center gap-8 text-sm text-muted-foreground">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {topMatch.agreements}
-                </div>
-                <div>Overeenkomsten</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {topMatch.disagreements}
-                </div>
-                <div>Verschillen</div>
-              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="text-center hover:bg-muted rounded-lg p-2 transition-colors">
+                    <div className="text-2xl font-bold text-green-600">
+                      {topMatch.agreements}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      Overeenkomsten <Info className="h-3 w-3" />
+                    </div>
+                  </button>
+                </DialogTrigger>
+                <BreakdownDialog 
+                  breakdown={topMatch.breakdown} 
+                  partyName={topMatch.party.name} 
+                  type="agreements" 
+                />
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="text-center hover:bg-muted rounded-lg p-2 transition-colors">
+                    <div className="text-2xl font-bold text-red-600">
+                      {topMatch.disagreements}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      Verschillen <Info className="h-3 w-3" />
+                    </div>
+                  </button>
+                </DialogTrigger>
+                <BreakdownDialog 
+                  breakdown={topMatch.breakdown} 
+                  partyName={topMatch.party.name} 
+                  type="disagreements" 
+                />
+              </Dialog>
             </div>
           </div>
         </Card>
@@ -90,12 +193,30 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
                   </p>
                   
                   <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span className="text-green-600">
-                      {result.agreements} overeenkomsten
-                    </span>
-                    <span className="text-red-600">
-                      {result.disagreements} verschillen
-                    </span>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-green-600 hover:underline">
+                          {result.agreements} overeenkomsten
+                        </button>
+                      </DialogTrigger>
+                      <BreakdownDialog 
+                        breakdown={result.breakdown} 
+                        partyName={result.party.name} 
+                        type="agreements" 
+                      />
+                    </Dialog>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-red-600 hover:underline">
+                          {result.disagreements} verschillen
+                        </button>
+                      </DialogTrigger>
+                      <BreakdownDialog 
+                        breakdown={result.breakdown} 
+                        partyName={result.party.name} 
+                        type="disagreements" 
+                      />
+                    </Dialog>
                   </div>
                 </div>
               </div>

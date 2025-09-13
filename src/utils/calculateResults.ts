@@ -1,4 +1,4 @@
-import { Party, PartyResult } from "@/types/party";
+import { Party, PartyResult, QuestionBreakdown } from "@/types/party";
 import { Answer } from "@/components/QuizInterface";
 
 export const calculateResults = (
@@ -14,6 +14,7 @@ export const calculateResults = (
     let agreements = 0;
     let disagreements = 0;
     let totalComparisons = 0;
+    const breakdown: QuestionBreakdown[] = [];
 
     Object.entries(answers).forEach(([questionId, userAnswer]) => {
       const qId = parseInt(questionId);
@@ -23,19 +24,55 @@ export const calculateResults = (
         totalComparisons++;
         
         if (userAnswer === partyAnswer) {
-          matches++;
-          if (userAnswer === "agree") agreements++;
-          else if (userAnswer === "disagree") disagreements++;
-        } else {
-          // Partial credit for neutral answers
-          if (userAnswer === "neutral" || partyAnswer === "neutral") {
-            matches += 0.5;
+          // Exact matches
+          if (userAnswer === "agree") {
+            matches++;
+            agreements++;
+            breakdown.push({
+              questionId: qId,
+              userAnswer,
+              partyAnswer,
+              result: "agreement"
+            });
+          } else if (userAnswer === "disagree") {
+            matches++;
+            disagreements++;
+            breakdown.push({
+              questionId: qId,
+              userAnswer,
+              partyAnswer,
+              result: "agreement"
+            });
+          } else {
+            // Both neutral - minimal credit
+            matches += 0.3;
+            breakdown.push({
+              questionId: qId,
+              userAnswer,
+              partyAnswer,
+              result: "neutral_match"
+            });
           }
-          
-          if (userAnswer === "agree" && partyAnswer === "disagree") {
+        } else {
+          // Different positions
+          if ((userAnswer === "agree" && partyAnswer === "disagree") || 
+              (userAnswer === "disagree" && partyAnswer === "agree")) {
             disagreements++;
-          } else if (userAnswer === "disagree" && partyAnswer === "agree") {
-            disagreements++;
+            breakdown.push({
+              questionId: qId,
+              userAnswer,
+              partyAnswer,
+              result: "disagreement"
+            });
+          } else {
+            // One is neutral, other has position - very small credit
+            matches += 0.1;
+            breakdown.push({
+              questionId: qId,
+              userAnswer,
+              partyAnswer,
+              result: "neutral_partial"
+            });
           }
         }
       }
@@ -50,7 +87,8 @@ export const calculateResults = (
       score: matches,
       percentage: matchPercentage,
       agreements,
-      disagreements
+      disagreements,
+      breakdown
     };
   }).sort((a, b) => b.percentage - a.percentage);
 };
