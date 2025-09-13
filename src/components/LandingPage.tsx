@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import heroImage from "@/assets/hero-democracy.jpg";
+import heroImage from "@/assets/hero-ai-kieswijzer.webp";
 import { Info, Shield, Clock } from "lucide-react";
 interface LandingPageProps {
   onStart: () => void;
