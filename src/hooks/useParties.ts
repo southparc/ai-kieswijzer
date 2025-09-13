@@ -18,6 +18,8 @@ const PARTY_COLORS: Record<string, string> = {
   'Volt': '#662D91',
   'JA21': '#1E3A8A',
   'BVNL': '#8B4513',
+  'SGP': '#2C5282',
+  'DENK': '#00A79D',
   // Fallback colors for any additional parties
   'default': '#6B7280'
 };
@@ -37,8 +39,16 @@ const PARTY_DESCRIPTIONS: Record<string, string> = {
   'BBB': 'Partij die opkomt voor boeren, burgers en het platteland.',
   'Volt': 'Europese beweging die zich richt op innovatie en Europese samenwerking.',
   'JA21': 'Liberaal-conservatieve partij die zich richt op Nederlandse waarden en normen.',
-  'BVNL': 'Partij die zich inzet voor Nederlandse soevereiniteit en democratische waarden.'
+  'BVNL': 'Partij die zich inzet voor Nederlandse soevereiniteit en democratische waarden.',
+  'SGP': 'Staatkundig Gereformeerde Partij met focus op christelijke waarden en traditie.',
+  'DENK': 'Partij die zich inzet voor diversiteit, gelijkwaardigheid en gelijke kansen.'
 };
+
+// Canonical list to guarantee at least 16 parties in the quiz
+const DEFAULT_PARTY_NAMES = [
+  'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
+  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK'
+];
 
 // Generate default positions for parties based on their political orientation
 const generateDefaultPositions = (partyName: string): Record<number, "agree" | "neutral" | "disagree"> => {
@@ -109,14 +119,31 @@ export const useParties = () => {
         }
       });
 
-      // Convert to Party objects
-      const formattedParties: Party[] = Array.from(partyMap.values()).map((dbParty) => ({
-        id: dbParty.party.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        name: dbParty.party,
-        color: PARTY_COLORS[dbParty.party] || PARTY_COLORS.default,
-        description: PARTY_DESCRIPTIONS[dbParty.party] || `${dbParty.party} - Nederlandse politieke partij`,
-        positions: generateDefaultPositions(dbParty.party)
-      }));
+      // Ensure we always include our canonical list (fallbacks if missing in DB)
+      DEFAULT_PARTY_NAMES.forEach((name) => {
+        if (!partyMap.has(name)) {
+          partyMap.set(name, {
+            id: crypto.randomUUID(),
+            party: name,
+            title: `${name} programma` ,
+            url: '#',
+            year: undefined,
+            version: undefined,
+            inserted_at: new Date(0).toISOString()
+          } as unknown as DatabaseParty);
+        }
+      });
+
+      // Convert to Party objects and sort by name
+      const formattedParties: Party[] = Array.from(partyMap.values())
+        .map((dbParty) => ({
+          id: dbParty.party.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          name: dbParty.party,
+          color: PARTY_COLORS[dbParty.party] || PARTY_COLORS.default,
+          description: PARTY_DESCRIPTIONS[dbParty.party] || `${dbParty.party} - Nederlandse politieke partij`,
+          positions: generateDefaultPositions(dbParty.party)
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
       setParties(formattedParties);
     } catch (err) {
