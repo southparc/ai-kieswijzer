@@ -1,6 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// PDF parsing (runs in Deno with a web worker)
+import { getDocument, GlobalWorkerOptions } from "https://esm.sh/pdfjs-dist@3.11.174/build/pdf.js";
+
+// Configure pdf.js worker
+GlobalWorkerOptions.workerSrc =
+  "https://esm.sh/pdfjs-dist@3.11.174/build/pdf.worker.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,28 +36,28 @@ function parsePartyAndTitle(filename: string) {
 
   // crude mapping based on common substrings
   const mappings: Record<string, string> = {
-    "groenlinks": "GroenLinks-PvdA",
-    "pvdagl": "GroenLinks-PvdA",
+    groenlinks: "GroenLinks-PvdA",
+    pvdagl: "GroenLinks-PvdA",
     "pvd a": "GroenLinks-PvdA",
-    "pvda": "GroenLinks-PvdA",
-    "vvd": "VVD",
-    "d66": "D66",
-    "cda": "CDA",
-    "pvv": "PVV",
-    "nsc": "NSC",
+    pvda: "GroenLinks-PvdA",
+    vvd: "VVD",
+    d66: "D66",
+    cda: "CDA",
+    pvv: "PVV",
+    nsc: "NSC",
     "nieuw sociaal contract": "NSC",
-    "bbb": "BBB",
-    "sp": "SP",
+    bbb: "BBB",
+    sp: "SP",
     "partij voor de dieren": "Partij voor de Dieren",
     "partij van de dieren": "Partij voor de Dieren",
-    "pvdd": "Partij voor de Dieren",
-    "christenunie": "ChristenUnie",
+    pvdd: "Partij voor de Dieren",
+    christenunie: "ChristenUnie",
     "christen unie": "ChristenUnie",
     "cu ": "ChristenUnie",
-    "volt": "Volt",
-    "ja21": "JA21",
-    "bvnl": "BVNL",
-    "fvd": "FvD",
+    volt: "Volt",
+    ja21: "JA21",
+    bvnl: "BVNL",
+    fvd: "FvD",
   };
 
   let party = "Onbekend";
@@ -84,6 +90,55 @@ async function createEmbedding(input: string) {
   }
   const data = await res.json();
   return data.data[0].embedding as number[];
+}
+
+// --- PDF helpers ------------------------------------------------------------
+async function fetchPdf(publicUrl: string): Promise<Uint8Array> {
+  const pdfRes = await fetch(publicUrl);
+  if (!pdfRes.ok) {
+    const t = await pdfRes.text().catch(() => "");
+    throw new Error(`Failed to fetch PDF (${pdfRes.status}): ${t}`);
+  }
+  const buf = await pdfRes.arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+async function extractPdfPagesText(pdfBytes: Uint8Array): Promise<string[]> {
+  const loadingTask = getDocument({ data: pdfBytes });
+  const doc = await loadingTask.promise;
+  const pages: string[] = [];
+  const total = doc.numPages;
+
+  for (let p = 1; p <= total; p++) {
+    const page = await doc.getPage(p);
+    const textContent = await page.getTextContent();
+    const text = (textContent.items as any[])
+      .map((it) => (typeof it?.str === "string" ? it.str : ""))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    pages.push(text);
+  }
+
+  try {
+    await doc.destroy();
+  } catch (_) {
+    // ignore
+  }
+
+  return pages;
+}
+
+function chunkText(text: string, chunkSize = 1200, overlap = 100): string[] {
+  const chunks: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    const end = Math.min(i + chunkSize, text.length);
+    chunks.push(text.slice(i, end));
+    if (end === text.length) break;
+    i = end - overlap;
+  }
+  return chunks.filter((c) => c.trim().length > 0);
 }
 
 serve(async (req) => {
@@ -127,6 +182,7 @@ serve(async (req) => {
       status: "processed" | "skipped" | "error";
       message?: string;
       document_id?: string;
+      chunks?: number;
     }> = [];
 
     for (const name of files) {
@@ -142,12 +198,7 @@ serve(async (req) => {
           .eq("url", publicUrl)
           .maybeSingle();
         if (existErr) throw existErr;
-        if (existing && !reingest) {
-          results.push({ file: name, status: "skipped", message: "already ingested" });
-          continue;
-        }
 
-        // Insert or reuse document
         let documentId = existing?.id as string | undefined;
         if (!documentId) {
           const { data: document, error: docError } = await supabase
@@ -157,23 +208,93 @@ serve(async (req) => {
             .single();
           if (docError) throw docError;
           documentId = document.id;
+        } else if (reingest) {
+          // Clean old chunks for this doc
+          const { error: delErr } = await supabase
+            .from("chunks")
+            .delete()
+            .eq("document_id", documentId);
+          if (delErr) throw delErr;
+        } else if (existing && !reingest) {
+          results.push({ file: name, status: "skipped", message: "already ingested", document_id: documentId });
+          continue;
         }
 
-        const placeholderContent = `Dit is een placeholder voor ${title} van ${party}. In een volledige implementatie zou hier de werkelijke content van het PDF staan.`;
-        const embedding = await createEmbedding(placeholderContent);
+        // Fetch and parse PDF
+        let pages: string[] = [];
+        try {
+          const bytes = await fetchPdf(publicUrl);
+          pages = await extractPdfPagesText(bytes);
+        } catch (pdfErr) {
+          console.error("PDF parse failed for", name, pdfErr);
+        }
 
-        const { error: chunkError } = await supabase
-          .from("chunks")
-          .insert({
-            document_id: documentId,
-            content: placeholderContent,
+        // Fallback to placeholder when extraction failed
+        if (pages.length === 0) {
+          const placeholderContent = `Dit is een placeholder voor ${title} van ${party}.`;
+          const embedding = await createEmbedding(placeholderContent);
+          const { error: chunkError } = await supabase
+            .from("chunks")
+            .insert({
+              document_id: documentId,
+              content: placeholderContent,
+              page: 1,
+              tokens: placeholderContent.split(" ").length,
+              embedding,
+            });
+          if (chunkError) throw chunkError;
+          results.push({ file: name, status: "processed", document_id: documentId, chunks: 1, message: "fallback: placeholder" });
+          continue;
+        }
+
+        // Build chunks per page and insert in batches
+        const rows: Array<{
+          document_id: string;
+          content: string;
+          page: number;
+          tokens: number;
+          embedding: number[];
+        }> = [];
+
+        // Limit pages to avoid cost; adjust if needed
+        const MAX_PAGES = 40;
+        for (let p = 0; p < Math.min(pages.length, MAX_PAGES); p++) {
+          const pageText = pages[p];
+          const parts = chunkText(pageText);
+          for (const part of parts) {
+            const embedding = await createEmbedding(part);
+            rows.push({
+              document_id: documentId!,
+              content: part,
+              page: p + 1,
+              tokens: part.split(/\s+/).length,
+              embedding,
+            });
+          }
+        }
+
+        if (rows.length === 0) {
+          // Should never happen, but keep a minimal record
+          const placeholder = `Geen tekst geëxtraheerd uit ${title}.`;
+          const embedding = await createEmbedding(placeholder);
+          rows.push({
+            document_id: documentId!,
+            content: placeholder,
             page: 1,
-            tokens: placeholderContent.split(" ").length,
+            tokens: placeholder.split(/\s+/).length,
             embedding,
           });
-        if (chunkError) throw chunkError;
+        }
 
-        results.push({ file: name, status: "processed", document_id: documentId });
+        // Insert in smaller batches to avoid payload limits
+        const BATCH = 50;
+        for (let i = 0; i < rows.length; i += BATCH) {
+          const slice = rows.slice(i, i + BATCH);
+          const { error: insErr } = await supabase.from("chunks").insert(slice);
+          if (insErr) throw insErr;
+        }
+
+        results.push({ file: name, status: "processed", document_id: documentId, chunks: rows.length });
       } catch (e) {
         console.error("Error processing file", name, e);
         results.push({ file: name, status: "error", message: (e as Error).message });
