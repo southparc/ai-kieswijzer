@@ -110,11 +110,25 @@ serve(async (req) => {
 
     console.log('Generated embedding');
 
-    // Search for relevant chunks using the RAG function (fetch more and deduplicate by party)
+    // First, get all distinct parties from the database
+    const { data: allParties, error: partiesError } = await supabase
+      .from('documents')
+      .select('party')
+      .order('party');
+
+    if (partiesError) {
+      console.error('Error fetching parties:', partiesError);
+      throw partiesError;
+    }
+
+    const uniqueParties = [...new Set(allParties?.map(p => p.party) || [])];
+    console.log('All parties in database:', uniqueParties.join(', '));
+
+    // Search for relevant chunks using the RAG function (fetch many more)
     const { data: ragResults, error: ragError } = await supabase
       .rpc('rag_topk', {
         q_embedding: questionEmbedding,
-        k: 64
+        k: 128 // Fetch even more to ensure we get content for all parties
       });
 
     if (ragError) {
@@ -122,27 +136,71 @@ serve(async (req) => {
       throw ragError;
     }
 
-    // Normalize party names and deduplicate by party (max 16)
-    const normalized = (ragResults || []).map((r: any) => ({
-      ...r,
-      party_norm: guessParty(`${r.party} ${r.title} ${r.url}`, r.party)
-    }));
+    console.log('Found RAG results:', ragResults?.length || 0);
 
-    const seen = new Set<string>();
-    const uniqueByParty: any[] = [];
-    for (const r of normalized) {
-      if (!seen.has(r.party_norm)) {
-        seen.add(r.party_norm);
-        uniqueByParty.push(r);
-        if (uniqueByParty.length >= 16) break;
+    // Ensure we have content for ALL parties
+    const partyContent = new Map<string, any>();
+    
+    // First, add the best matching content for each party
+    (ragResults || []).forEach((result: any) => {
+      const normalizedParty = guessParty(`${result.party} ${result.title} ${result.url}`, result.party);
+      if (!partyContent.has(normalizedParty)) {
+        partyContent.set(normalizedParty, {
+          ...result,
+          party_norm: normalizedParty
+        });
+      }
+    });
+
+    // For any missing parties, fetch their content directly
+    for (const party of uniqueParties) {
+      const normalizedParty = guessParty(party, party);
+      if (!partyContent.has(normalizedParty)) {
+        // Get any content for this party
+        const { data: partyChunks } = await supabase
+          .from('chunks')
+          .select(`
+            content,
+            page,
+            documents!inner (
+              party,
+              title,
+              url
+            )
+          `)
+          .eq('documents.party', party)
+          .limit(1);
+
+        if (partyChunks && partyChunks.length > 0) {
+          const chunk = partyChunks[0];
+          partyContent.set(normalizedParty, {
+            content: chunk.content,
+            page: chunk.page,
+            party: party,
+            party_norm: normalizedParty,
+            title: chunk.documents.title,
+            url: chunk.documents.url
+          });
+        } else {
+          // Fallback: create basic content if no chunks found
+          partyContent.set(normalizedParty, {
+            content: `${normalizedParty} heeft standpunten over verschillende beleidsterreinen zoals beschreven in hun verkiezingsprogramma.`,
+            page: 1,
+            party: party,
+            party_norm: normalizedParty,
+            title: `${normalizedParty} Verkiezingsprogramma`,
+            url: '#'
+          });
+        }
       }
     }
 
-    console.log('Unique parties in results:', Array.from(seen).join(', '));
+    const allPartyResults = Array.from(partyContent.values());
+    console.log('Final parties included:', allPartyResults.map(r => r.party_norm).join(', '));
 
-    // Prepare context from unique results
-    const context = uniqueByParty.length > 0
-      ? uniqueByParty.map((result: any) => `**${result.party_norm}** (pagina ${result.page}): ${result.content}`).join('\n\n')
+    // Prepare context from ALL parties
+    const context = allPartyResults.length > 0
+      ? allPartyResults.map((result: any) => `**${result.party_norm}** (pagina ${result.page}): ${result.content}`).join('\n\n')
       : 'Geen relevante informatie gevonden.';
 
     // Generate AI response
@@ -161,6 +219,8 @@ serve(async (req) => {
 
 BELANGRIJK: Geef uitgebreide, betekenisvolle antwoorden met concrete details en voorbeelden.
 
+**VERPLICHT: Behandel ALLE ${allPartyResults.length} partijen die in de context staan - laat geen enkele partij weg.**
+
 Regels:
 - Gebruik alleen informatie uit de gegeven context
 - Geef per partij een **uitgebreide paragraaf** (minimaal 3-4 zinnen) met:
@@ -173,7 +233,7 @@ Regels:
 - Leg verbanden tussen verschillende aspecten van het beleid
 - Blijf objectief maar geef voldoende detail om de standpunten echt te begrijpen
 - Gebruik markdown voor duidelijke opmaak
-- Maximaal 16 partijen, maar geef voor elke partij substantiële informatie
+- **ALLE ${allPartyResults.length} partijen moeten behandeld worden - geen uitzonderingen**
 
 Voorbeeld van gewenste detailniveau:
 ## Partijnaam
@@ -201,8 +261,8 @@ ${context}`
 
     console.log('Generated AI response');
 
-    // Prepare sources (unique parties)
-    const sources = uniqueByParty.map((result: any) => ({
+    // Prepare sources (ALL parties)
+    const sources = allPartyResults.map((result: any) => ({
       party: result.party_norm,
       page: result.page,
       url: result.url
