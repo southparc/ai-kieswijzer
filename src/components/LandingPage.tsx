@@ -65,7 +65,7 @@ Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijpr
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Database bijgewerkt op 27 augustus 2025 met de meest recente 
+              Database bijgewerkt op 13 september 2025 met de meest recente 
               partijprogramma's.
             </p>
           </Card>
