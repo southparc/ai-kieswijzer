@@ -5,16 +5,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Upload, Loader2, Edit2, Trash2, Plus, Save } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Edit2, Trash2, Plus, Save, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DatabaseQuestion } from "@/hooks/useQuestions";
+import type { User } from '@supabase/supabase-js';
 
 interface AdminPageProps {
   onBack: () => void;
 }
 
+const ALLOWED_EMAILS = ['diederik@southparc.nl', 'judith@southparc.nl'];
+
 export const AdminPage = ({ onBack }: AdminPageProps) => {
+  // Auth state
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     party: "",
     title: "",
@@ -36,10 +45,27 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     description: ""
   });
 
+  // Auth effect
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Fetch questions
   useEffect(() => {
-    fetchQuestions();
-  }, []);
+    if (user && ALLOWED_EMAILS.includes(user.email!)) {
+      fetchQuestions();
+    }
+  }, [user]);
 
   const fetchQuestions = async () => {
     setQuestionsLoading(true);
@@ -257,17 +283,34 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       });
     }
   };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Succes",
+      description: "Uitgelogd"
+    });
+  };
   
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={onBack} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Terug
-          </Button>
-          <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Terug
+            </Button>
+            <h1 className="text-3xl font-bold">Admin Panel</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+            <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Uitloggen
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="questions" className="w-full">
