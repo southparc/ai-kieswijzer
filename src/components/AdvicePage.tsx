@@ -51,7 +51,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
 
   useEffect(() => {
     // Set fallback stats for now
-    setStats({ docCount: 25, lastUpdate: '27-08-2025' });
+    setStats({ docCount: 25, lastUpdate: '13-09-2025' });
   }, []);
 
   const handleCompare = async () => {
