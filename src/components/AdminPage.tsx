@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Upload, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Upload, Loader2, Edit2, Trash2, Plus, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DatabaseQuestion } from "@/hooks/useQuestions";
 
 interface AdminPageProps {
   onBack: () => void;
@@ -22,6 +25,43 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
+  
+  // Questions state
+  const [questions, setQuestions] = useState<DatabaseQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
+  const [newQuestion, setNewQuestion] = useState({
+    statement: "",
+    category: "",
+    description: ""
+  });
+
+  // Fetch questions
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
+  const fetchQuestions = async () => {
+    setQuestionsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .order('order_index');
+
+      if (error) throw error;
+      setQuestions(data || []);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      toast({
+        title: "Fout",
+        description: "Kon vragen niet laden",
+        variant: "destructive"
+      });
+    } finally {
+      setQuestionsLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -100,6 +140,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   };
 
   const [ingestLoading, setIngestLoading] = useState(false);
+  
   const handleIngestFromStorage = async () => {
     setIngestLoading(true);
     try {
@@ -120,6 +161,103 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       setIngestLoading(false);
     }
   };
+
+  // Question management functions
+  const updateQuestion = async (id: number, updates: Partial<DatabaseQuestion>) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Succes",
+        description: "Vraag bijgewerkt"
+      });
+      
+      fetchQuestions();
+      setEditingQuestion(null);
+    } catch (error) {
+      console.error('Error updating question:', error);
+      toast({
+        title: "Fout",
+        description: "Kon vraag niet bijwerken",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteQuestion = async (id: number) => {
+    if (!confirm('Weet je zeker dat je deze vraag wilt verwijderen?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Succes",
+        description: "Vraag verwijderd"
+      });
+      
+      fetchQuestions();
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      toast({
+        title: "Fout",
+        description: "Kon vraag niet verwijderen",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addQuestion = async () => {
+    if (!newQuestion.statement || !newQuestion.category || !newQuestion.description) {
+      toast({
+        title: "Fout",
+        description: "Vul alle velden in",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const maxOrder = Math.max(...questions.map(q => q.order_index), 0);
+      
+      const { error } = await supabase
+        .from('questions')
+        .insert({
+          statement: newQuestion.statement,
+          category: newQuestion.category,
+          description: newQuestion.description,
+          order_index: maxOrder + 1,
+          active: true
+        });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Succes",
+        description: "Vraag toegevoegd"
+      });
+      
+      setNewQuestion({ statement: "", category: "", description: "" });
+      fetchQuestions();
+    } catch (error) {
+      console.error('Error adding question:', error);
+      toast({
+        title: "Fout",
+        description: "Kon vraag niet toevoegen",
+        variant: "destructive"
+      });
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
@@ -129,107 +267,275 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <ArrowLeft className="h-4 w-4" />
             Terug
           </Button>
-          <h1 className="text-3xl font-bold">Beheer Documenten</h1>
+          <h1 className="text-3xl font-bold">Admin Panel</h1>
         </div>
 
-        {/* Upload Form */}
-        <Card className="p-6 max-w-2xl">
-          <h2 className="text-xl font-semibold mb-6">Document Upload</h2>
+        <Tabs defaultValue="questions" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="questions">Quiz Vragen</TabsTrigger>
+            <TabsTrigger value="documents">Documenten</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="party">Partij *</Label>
-              <Input
-                id="party"
-                value={formData.party}
-                onChange={(e) => handleInputChange('party', e.target.value)}
-                placeholder="Naam van de politieke partij"
-              />
-            </div>
+          <TabsContent value="questions" className="space-y-6">
+            {/* Add New Question */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Nieuwe Vraag Toevoegen</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="new-statement">Stelling</Label>
+                  <Textarea
+                    id="new-statement"
+                    value={newQuestion.statement}
+                    onChange={(e) => setNewQuestion(prev => ({ ...prev, statement: e.target.value }))}
+                    placeholder="De overheid moet meer geld uitgeven aan..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-category">Categorie</Label>
+                  <Input
+                    id="new-category"
+                    value={newQuestion.category}
+                    onChange={(e) => setNewQuestion(prev => ({ ...prev, category: e.target.value }))}
+                    placeholder="Zorg & Welzijn"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-description">Beschrijving</Label>
+                  <Textarea
+                    id="new-description"
+                    value={newQuestion.description}
+                    onChange={(e) => setNewQuestion(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Dit gaat over de financiering van..."
+                  />
+                </div>
+                <Button onClick={addQuestion} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Vraag Toevoegen
+                </Button>
+              </div>
+            </Card>
 
-            <div>
-              <Label htmlFor="title">Titel *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Titel van het document"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="year">Jaar</Label>
-              <Input
-                id="year"
-                type="number"
-                value={formData.year}
-                onChange={(e) => handleInputChange('year', e.target.value)}
-                placeholder="2024"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="version">Versie</Label>
-              <Input
-                id="version"
-                value={formData.version}
-                onChange={(e) => handleInputChange('version', e.target.value)}
-                placeholder="v1.0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="file">PDF Bestand *</Label>
-              <Input
-                id="file"
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-              />
-              {file && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Geselecteerd: {file.name}
-                </p>
+            {/* Existing Questions */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Bestaande Vragen ({questions.length})</h2>
+              {questionsLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Laden...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {questions.map((question) => (
+                    <Card key={question.id} className="p-4">
+                      {editingQuestion === question.id ? (
+                        <EditQuestionForm
+                          question={question}
+                          onSave={(updates) => updateQuestion(question.id, updates)}
+                          onCancel={() => setEditingQuestion(null)}
+                        />
+                      ) : (
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-medium text-muted-foreground">#{question.id}</span>
+                              <span className="text-sm bg-muted px-2 py-1 rounded">{question.category}</span>
+                              <span className={`text-sm px-2 py-1 rounded ${question.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {question.active ? 'Actief' : 'Inactief'}
+                              </span>
+                            </div>
+                            <p className="font-medium mb-1">{question.statement}</p>
+                            <p className="text-sm text-muted-foreground">{question.description}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingQuestion(question.id)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteQuestion(question.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
               )}
-            </div>
+            </Card>
+          </TabsContent>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button 
-                onClick={handleUpload}
-                disabled={loading}
-                className="w-full gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Uploaden...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4" />
-                    Inladen (nieuw bestand)
-                  </>
-                )}
-              </Button>
+          <TabsContent value="documents">
+            {/* Upload Form */}
+            <Card className="p-6 max-w-2xl">
+              <h2 className="text-xl font-semibold mb-6">Document Upload</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="party">Partij *</Label>
+                  <Input
+                    id="party"
+                    value={formData.party}
+                    onChange={(e) => handleInputChange('party', e.target.value)}
+                    placeholder="Naam van de politieke partij"
+                  />
+                </div>
 
-              <Button 
-                onClick={handleIngestFromStorage}
-                variant="secondary"
-                disabled={ingestLoading}
-                className="w-full gap-2"
-              >
-                {ingestLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Indexeren...
-                  </>
-                ) : (
-                  <>Indexeer bestaande bestanden</>
-                )}
-              </Button>
-            </div>
-          </div>
-        </Card>
+                <div>
+                  <Label htmlFor="title">Titel *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="Titel van het document"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="year">Jaar</Label>
+                  <Input
+                    id="year"
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => handleInputChange('year', e.target.value)}
+                    placeholder="2024"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="version">Versie</Label>
+                  <Input
+                    id="version"
+                    value={formData.version}
+                    onChange={(e) => handleInputChange('version', e.target.value)}
+                    placeholder="v1.0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="file">PDF Bestand *</Label>
+                  <Input
+                    id="file"
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                  />
+                  {file && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Geselecteerd: {file.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button 
+                    onClick={handleUpload}
+                    disabled={loading}
+                    className="w-full gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploaden...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Inladen (nieuw bestand)
+                      </>
+                    )}
+                  </Button>
+
+                  <Button 
+                    onClick={handleIngestFromStorage}
+                    variant="secondary"
+                    disabled={ingestLoading}
+                    className="w-full gap-2"
+                  >
+                    {ingestLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Indexeren...
+                      </>
+                    ) : (
+                      <>Indexeer bestaande bestanden</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+// Edit Question Form Component
+interface EditQuestionFormProps {
+  question: DatabaseQuestion;
+  onSave: (updates: Partial<DatabaseQuestion>) => void;
+  onCancel: () => void;
+}
+
+const EditQuestionForm = ({ question, onSave, onCancel }: EditQuestionFormProps) => {
+  const [formData, setFormData] = useState({
+    statement: question.statement,
+    category: question.category,
+    description: question.description,
+    active: question.active
+  });
+
+  const handleSave = () => {
+    onSave(formData);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Stelling</Label>
+        <Textarea
+          value={formData.statement}
+          onChange={(e) => setFormData(prev => ({ ...prev, statement: e.target.value }))}
+        />
+      </div>
+      <div>
+        <Label>Categorie</Label>
+        <Input
+          value={formData.category}
+          onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+        />
+      </div>
+      <div>
+        <Label>Beschrijving</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="active"
+          checked={formData.active}
+          onChange={(e) => setFormData(prev => ({ ...prev, active: e.target.checked }))}
+        />
+        <Label htmlFor="active">Actief</Label>
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={handleSave} className="gap-2">
+          <Save className="h-4 w-4" />
+          Opslaan
+        </Button>
+        <Button variant="outline" onClick={onCancel}>
+          Annuleren
+        </Button>
       </div>
     </div>
   );

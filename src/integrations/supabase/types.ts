@@ -186,6 +186,39 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          description: string
+          id: number
+          order_index: number
+          statement: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          description: string
+          id?: number
+          order_index?: number
+          statement: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string
+          id?: number
+          order_index?: number
+          statement?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
