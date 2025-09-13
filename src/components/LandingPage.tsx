@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import heroImage from "@/assets/hero-ai-kieswijzer.webp";
-import { Info, Shield, Clock } from "lucide-react";
+import { Info, Shield, Clock, Users } from "lucide-react";
+import { useUsageCount } from "@/hooks/useUsageCount";
 interface LandingPageProps {
   onStart: () => void;
   onStartQuiz: () => void;
@@ -10,6 +11,7 @@ export const LandingPage = ({
   onStart,
   onStartQuiz
 }: LandingPageProps) => {
+  const { count: usageCount, loading: countLoading } = useUsageCount();
   return <div className="min-h-screen bg-gradient-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -31,6 +33,14 @@ Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijpr
                 <Button size="lg" variant="dutch-blue" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStartQuiz}>
                   Stemwijzer Quiz
                 </Button>
+              </div>
+              
+              {/* Usage Counter */}
+              <div className="flex items-center justify-center sm:justify-start gap-2 text-muted-foreground text-sm sm:text-base">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>
+                  {countLoading ? 'Laden...' : `${usageCount.toLocaleString('nl-NL')} keer gebruikt`}
+                </span>
               </div>
             </div>
             <div className="relative">
