@@ -28,37 +28,29 @@ function parsePartyAndTitle(filename: string) {
   const humanTitle = base.replace(/[._-]+/g, " ").trim();
   const lower = humanTitle.toLowerCase();
 
-  // crude mapping based on common substrings
-  const mappings: Record<string, string> = {
-    groenlinks: "GroenLinks-PvdA",
-    pvdagl: "GroenLinks-PvdA",
-    "pvd a": "GroenLinks-PvdA",
-    pvda: "GroenLinks-PvdA",
-    vvd: "VVD",
-    d66: "D66",
-    cda: "CDA",
-    pvv: "PVV",
-    nsc: "NSC",
-    "nieuw sociaal contract": "NSC",
-    bbb: "BBB",
-    sp: "SP",
-    "partij voor de dieren": "Partij voor de Dieren",
-    "partij van de dieren": "Partij voor de Dieren",
-    "pvddv": "Partij voor de Dieren",
-    "pvdd": "Partij voor de Dieren",
-    christenunie: "ChristenUnie",
-    "christen unie": "ChristenUnie",
-    "cu ": "ChristenUnie",
-    volt: "Volt",
-    ja21: "JA21",
-    bvnl: "BVNL",
-    fvd: "FvD",
-  };
+  // Robust regex-based matching with word boundaries; order matters (specific before generic)
+  const patterns: Array<{ regex: RegExp; party: string }> = [
+    { regex: /(groenlinks|pvdagl|gl[\s_-]?pvda|pvda[\s_-]?gl)/i, party: "GroenLinks-PvdA" },
+    { regex: /(^|[\s_-])vvd([\s_-]|$)/i, party: "VVD" },
+    { regex: /(^|[\s_-])d66([\s_-]|$)/i, party: "D66" },
+    { regex: /(^|[\s_-])cda([\s_-]|$)/i, party: "CDA" },
+    { regex: /(^|[\s_-])pvv([\s_-]|$)/i, party: "PVV" },
+    { regex: /(nieuw\s+sociaal\s+contract)|(^|[\s_-])nsc([\s_-]|$)/i, party: "NSC" },
+    { regex: /(^|[\s_-])bbb([\s_-]|$)/i, party: "BBB" },
+    { regex: /(partij\s+(voor|van)\s+de\s+dieren)|(^|[\s_-])pvddv?([\s_-]|$)/i, party: "Partij voor de Dieren" },
+    { regex: /(christen\s*unie)|(^|[\s_-])cu([\s_-]|$)/i, party: "ChristenUnie" },
+    { regex: /(^|[\s_-])volt([\s_-]|$)/i, party: "Volt" },
+    { regex: /(^|[\s_-])ja21([\s_-]|$)/i, party: "JA21" },
+    { regex: /(^|[\s_-])bvnl([\s_-]|$)/i, party: "BVNL" },
+    { regex: /(^|[\s_-])fvd([\s_-]|$)/i, party: "FvD" },
+    // Place SP last so 'verkiezingsprogramma' doesn't trigger it
+    { regex: /(^|[\s_-])sp([\s_-]|$)/i, party: "SP" },
+  ];
 
   let party = "Onbekend";
-  for (const key of Object.keys(mappings)) {
-    if (lower.includes(key)) {
-      party = mappings[key];
+  for (const p of patterns) {
+    if (p.regex.test(lower)) {
+      party = p.party;
       break;
     }
   }
@@ -301,6 +293,13 @@ serve(async (req) => {
           if (docError) throw docError;
           documentId = document.id;
         } else if (reingest) {
+          // Update document metadata (party/title) in case parsing improves
+          const { error: updErr } = await supabase
+            .from("documents")
+            .update({ party, title, year: defaultYear, version: defaultVersion })
+            .eq("id", documentId);
+          if (updErr) throw updErr;
+
           // Clean old chunks for this doc
           const { error: delErr } = await supabase
             .from("chunks")
