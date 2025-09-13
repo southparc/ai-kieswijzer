@@ -42,6 +42,11 @@ Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijpr
                   {countLoading ? 'Laden...' : `${usageCount.toLocaleString('nl-NL')} keer gebruikt`}
                 </span>
               </div>
+              
+              {/* Version */}
+              <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
+                <span>v 0.31</span>
+              </div>
             </div>
             <div className="relative">
               <img src={heroImage} alt="Nederlandse democratie - stemmen en verkiezingen" className="w-full h-auto rounded-2xl shadow-elegant" />
