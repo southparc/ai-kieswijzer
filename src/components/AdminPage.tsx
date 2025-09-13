@@ -103,9 +103,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   const handleIngestFromStorage = async () => {
     setIngestLoading(true);
     try {
+      console.log('[Admin] Invoking ingest_from_storage...');
       const { data, error } = await supabase.functions.invoke('ingest_from_storage', {
-        body: {}
+        body: { reingest: true, defaultYear: new Date().getFullYear() }
       });
+      console.log('[Admin] ingest_from_storage result:', { data, error });
       if (error) throw error;
       toast({
         title: 'Indexeren voltooid',
@@ -113,12 +115,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       });
     } catch (e) {
       console.error('Ingest from storage error:', e);
-      toast({ title: 'Fout', description: 'Indexeren vanuit Storage mislukt.', variant: 'destructive' });
+      toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Indexeren vanuit Storage mislukt.', variant: 'destructive' });
     } finally {
       setIngestLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
