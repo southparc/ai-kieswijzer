@@ -119,7 +119,7 @@ export const useParties = () => {
         }
       });
 
-      // Ensure we always include our canonical list (fallbacks if missing in DB)
+      // Add any missing parties from the canonical list (for completeness)
       DEFAULT_PARTY_NAMES.forEach((name) => {
         if (!partyMap.has(name)) {
           partyMap.set(name, {
