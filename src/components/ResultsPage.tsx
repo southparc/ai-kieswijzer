@@ -4,21 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { RotateCcw, Share2, Download, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Answer } from "./QuizInterface";
-
-export interface Party {
-  id: string;
-  name: string;
-  color: string;
-  description: string;
-  positions: Record<number, Answer>;
-}
-
-interface PartyResult {
-  party: Party;
-  matchPercentage: number;
-  agreementCount: number;
-  disagreementCount: number;
-}
+import { PartyResult } from "@/types/party";
 
 interface ResultsPageProps {
   results: PartyResult[];
@@ -27,7 +13,7 @@ interface ResultsPageProps {
 
 export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
   const topMatch = results[0];
-  const sortedResults = [...results].sort((a, b) => b.matchPercentage - a.matchPercentage);
+  const sortedResults = [...results].sort((a, b) => b.percentage - a.percentage);
 
   return (
     <div className="min-h-screen bg-gradient-background">
@@ -51,7 +37,7 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
               Beste match: {topMatch.party.name}
             </h2>
             <div className="text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              {topMatch.matchPercentage}%
+              {topMatch.percentage}%
             </div>
             <p className="text-lg text-muted-foreground">
               {topMatch.party.description}
@@ -59,13 +45,13 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
             <div className="flex justify-center gap-8 text-sm text-muted-foreground">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {topMatch.agreementCount}
+                  {topMatch.agreements}
                 </div>
                 <div>Overeenkomsten</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
-                  {topMatch.disagreementCount}
+                  {topMatch.disagreements}
                 </div>
                 <div>Verschillen</div>
               </div>
@@ -90,12 +76,12 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-xl font-semibold">{result.party.name}</h4>
                     <span className="text-lg font-bold text-primary">
-                      {result.matchPercentage}%
+                      {result.percentage}%
                     </span>
                   </div>
                   
                   <Progress 
-                    value={result.matchPercentage} 
+                    value={result.percentage} 
                     className="mb-3 h-3"
                   />
                   
@@ -105,10 +91,10 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
                   
                   <div className="flex gap-4 text-sm text-muted-foreground">
                     <span className="text-green-600">
-                      {result.agreementCount} overeenkomsten
+                      {result.agreements} overeenkomsten
                     </span>
                     <span className="text-red-600">
-                      {result.disagreementCount} verschillen
+                      {result.disagreements} verschillen
                     </span>
                   </div>
                 </div>

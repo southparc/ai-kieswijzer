@@ -5,14 +5,17 @@ import { AdminPage } from "@/components/AdminPage";
 import { QuizInterface } from "@/components/QuizInterface";
 import { ResultsPage } from "@/components/ResultsPage";
 import { questions } from "@/data/questions";
-import { parties } from "@/data/parties";
 import { calculateResults } from "@/utils/calculateResults";
+import { PartyResult } from "@/types/party";
+import { useParties } from "@/hooks/useParties"; 
+import { Button } from "@/components/ui/button";
 
 type AppState = "landing" | "advice" | "admin" | "quiz" | "results";
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>("landing");
-  const [quizResults, setQuizResults] = useState<any[]>([]);
+  const [quizResults, setQuizResults] = useState<PartyResult[]>([]);
+  const { parties, loading: partiesLoading, error: partiesError } = useParties();
 
   const handleStart = () => {
     setAppState("advice");
@@ -31,9 +34,13 @@ const Index = () => {
   };
 
   const handleQuizComplete = (answers: Record<number, any>) => {
+    if (!parties || parties.length === 0) {
+      console.error("No parties available to calculate results");
+      return;
+    }
+    
     const results = calculateResults(answers, parties);
-    const sortedResults = results.sort((a, b) => b.matchPercentage - a.matchPercentage);
-    setQuizResults(sortedResults);
+    setQuizResults(results);
     setAppState("results");
   };
 
@@ -44,6 +51,32 @@ const Index = () => {
   // Check for admin access via URL parameter
   const urlParams = new URLSearchParams(window.location.search);
   const showAdmin = urlParams.get('admin') === 'true';
+
+  // Show loading state while parties are being fetched
+  if (partiesLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Partijen laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if parties failed to load
+  if (partiesError) {
+    return (
+      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Fout bij het laden van partijen: {partiesError}</p>
+          <Button onClick={() => window.location.reload()}>
+            Opnieuw proberen
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   switch (appState) {
     case "landing":

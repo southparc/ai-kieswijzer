@@ -1,17 +1,14 @@
+import { Party, PartyResult } from "@/types/party";
 import { Answer } from "@/components/QuizInterface";
-import { Party } from "@/components/ResultsPage";
-
-export interface PartyResult {
-  party: Party;
-  matchPercentage: number;
-  agreementCount: number;
-  disagreementCount: number;
-}
 
 export const calculateResults = (
   answers: Record<number, Answer>, 
   parties: Party[]
 ): PartyResult[] => {
+  if (!parties || parties.length === 0) {
+    return [];
+  }
+
   return parties.map(party => {
     let matches = 0;
     let agreements = 0;
@@ -50,9 +47,10 @@ export const calculateResults = (
 
     return {
       party,
-      matchPercentage,
-      agreementCount: agreements,
-      disagreementCount: disagreements
+      score: matches,
+      percentage: matchPercentage,
+      agreements,
+      disagreements
     };
-  });
+  }).sort((a, b) => b.percentage - a.percentage);
 };
