@@ -99,6 +99,26 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
   };
 
+  const [ingestLoading, setIngestLoading] = useState(false);
+  const handleIngestFromStorage = async () => {
+    setIngestLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ingest_from_storage', {
+        body: {}
+      });
+      if (error) throw error;
+      toast({
+        title: 'Indexeren voltooid',
+        description: `Bestanden: ${data?.total ?? 0}, verwerkt: ${data?.processed ?? 0}, overgeslagen: ${data?.skipped ?? 0}, fouten: ${data?.errors ?? 0}`,
+      });
+    } catch (e) {
+      console.error('Ingest from storage error:', e);
+      toast({ title: 'Fout', description: 'Indexeren vanuit Storage mislukt.', variant: 'destructive' });
+    } finally {
+      setIngestLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
@@ -172,23 +192,41 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
               )}
             </div>
 
-            <Button 
-              onClick={handleUpload}
-              disabled={loading}
-              className="w-full gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Uploaden...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4" />
-                  Inladen
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button 
+                onClick={handleUpload}
+                disabled={loading}
+                className="w-full gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploaden...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Inladen (nieuw bestand)
+                  </>
+                )}
+              </Button>
+
+              <Button 
+                onClick={handleIngestFromStorage}
+                variant="secondary"
+                disabled={ingestLoading}
+                className="w-full gap-2"
+              >
+                {ingestLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Indexeren...
+                  </>
+                ) : (
+                  <>Indexeer bestaande bestanden</>
+                )}
+              </Button>
+            </div>
           </div>
         </Card>
       </div>

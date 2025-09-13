@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ingest]
 verify_jwt = false
+
+[functions.ingest_from_storage]
+verify_jwt = false
