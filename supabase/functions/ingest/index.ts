@@ -48,25 +48,34 @@ serve(async (req) => {
 
 // Download and process the real PDF: extract text, chunk and embed
 // 1) Fetch PDF
-const pdfRes = await fetch(url);
-if (!pdfRes.ok) throw new Error(`Failed to fetch PDF (${pdfRes.status})`);
-const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+let fullText = '';
+try {
+  const pdfRes = await fetch(url);
+  if (!pdfRes.ok) throw new Error(`Failed to fetch PDF (${pdfRes.status})`);
+  const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
 
-// 2) Load pdfjs-serverless and extract text per page
-const { getDocument } = await import('https://esm.sh/pdfjs-serverless@1.0.1');
-const document = await getDocument({
-  data: pdfBytes,
-  useSystemFonts: true,
-}).promise;
-const pageTexts: string[] = [];
-for (let p = 1; p <= document.numPages; p++) {
-  const page = await document.getPage(p);
-  const textContent = await page.getTextContent();
-  const text = textContent.items.map((it: any) => (typeof it?.str === 'string' ? it.str : '')).join(' ').replace(/\s+/g, ' ').trim();
-  if (text) pageTexts.push(`[Pagina ${p}]\n${text}`);
+  // 2) Load pdfjs-serverless and extract text per page (robust for edge)
+  const { getDocument } = await import('https://esm.sh/pdfjs-serverless@1.0.1');
+  const document = await getDocument({ data: pdfBytes, useSystemFonts: true }).promise;
+
+  const pageTexts: string[] = [];
+  for (let p = 1; p <= document.numPages; p++) {
+    const page = await document.getPage(p);
+    const textContent = await page.getTextContent();
+    const text = textContent.items
+      .map((it: any) => (typeof it?.str === 'string' ? it.str : ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text) pageTexts.push(`[Pagina ${p}]\n${text}`);
+  }
+  fullText = pageTexts.join('\n\n');
+  console.log(`Extracted ~${fullText.length} characters from ${title}`);
+} catch (pdfErr) {
+  console.error('PDF extraction failed:', pdfErr);
+  // Continue with a placeholder so the ingestion never hard-fails on PDF issues
+  fullText = `Geen tekst geëxtraheerd uit ${title} (${party}). Error: ${pdfErr instanceof Error ? pdfErr.message : String(pdfErr)}`;
 }
-const fullText = pageTexts.join('\n\n');
-console.log(`Extracted ~${fullText.length} characters from ${title}`);
 
 // 3) Split into overlapping chunks
 function chunk(text: string, size = 1200, overlap = 100) {
@@ -78,18 +87,24 @@ const parts = fullText.trim() ? chunk(fullText) : [
   `Geen tekst geëxtraheerd uit ${title} (${party}).`,
 ];
 
-// 4) Generate embeddings and store chunks (batched)
+// 4) Generate embeddings and store chunks (batched, resilient)
 const rows: any[] = [];
 for (let i = 0; i < parts.length; i++) {
   const part = parts[i];
-  const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${openAIApiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'text-embedding-3-small', input: part }),
-  });
-  if (!embeddingResponse.ok) throw new Error(`Embedding API error: ${embeddingResponse.status}`);
-  const embeddingData = await embeddingResponse.json();
-  const embedding = embeddingData.data[0].embedding;
+  let embedding: number[] | null = null;
+  try {
+    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${openAIApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'text-embedding-3-small', input: part }),
+    });
+    if (!embeddingResponse.ok) throw new Error(`Embedding API error: ${embeddingResponse.status}`);
+    const embeddingData = await embeddingResponse.json();
+    embedding = embeddingData.data?.[0]?.embedding ?? null;
+  } catch (embErr) {
+    console.error(`Embedding failed for chunk ${i + 1}/${parts.length}:`, embErr);
+    // keep embedding as null; column is nullable so we can still index content
+  }
   rows.push({
     document_id: document.id,
     content: part,
