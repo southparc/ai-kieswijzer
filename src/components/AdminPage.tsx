@@ -658,6 +658,42 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </div>
               </div>
             </Card>
+
+            <Card className="p-6 mt-6">
+              <h2 className="text-xl font-semibold mb-4">RAG Gezondheid</h2>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button 
+                  onClick={handleHealthCheck}
+                  variant="outline"
+                  disabled={healthLoading}
+                  className="w-full sm:w-auto gap-2"
+                >
+                  {healthLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Controleren...
+                    </>
+                  ) : (
+                    <>Health check uitvoeren</>
+                  )}
+                </Button>
+              </div>
+
+              {health && (
+                <div className="mt-4 text-sm">
+                  <div className="mb-2">Totaal chunks: {health.total_chunks} • Placeholders: {health.placeholders}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {health.by_party?.map((p: any) => (
+                      <div key={p.party} className="border rounded p-3">
+                        <div className="font-medium">{p.party}</div>
+                        <div className="text-muted-foreground">chunks: {p.chunks} • placeholders: {p.placeholders}</div>
+                        {p.sample && <div className="mt-1 line-clamp-2">{p.sample}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
