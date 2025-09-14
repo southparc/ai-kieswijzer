@@ -3,6 +3,9 @@ project_id = "tcdfyajrywylkhqdefbp"
 [functions.ask]
 verify_jwt = false
 
+[functions.chat]
+verify_jwt = false
+
 [functions.ingest]
 verify_jwt = false
 

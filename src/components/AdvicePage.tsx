@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, ExternalLink, Send, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 
@@ -27,17 +28,33 @@ interface DocumentStats {
   lastUpdate: string;
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export const AdvicePage = ({ onBack }: AdvicePageProps) => {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdviceResult | null>(null);
   const [stats, setStats] = useState<DocumentStats>({ docCount: 0, lastUpdate: "" });
+  
+  // Chat state
+  const [chatMode, setChatMode] = useState(false);
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Set fallback stats for now
     setStats({ docCount: 25, lastUpdate: '13-09-2025' });
   }, []);
+
+  useEffect(() => {
+    // Auto-scroll to bottom of chat
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [conversationHistory]);
 
   const handleCompare = async () => {
     if (!question.trim()) return;
@@ -53,10 +70,19 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
 
       if (error) throw error;
 
-      setResult({
+      const resultData = {
         answer: data.answer || "Geen antwoord beschikbaar.",
         sources: data.sources || []
-      });
+      };
+
+      setResult(resultData);
+      
+      // Initialize chat with the first Q&A
+      setConversationHistory([
+        { role: 'user', content: question },
+        { role: 'assistant', content: resultData.answer }
+      ]);
+      
     } catch (error) {
       console.error('Error getting advice:', error);
       setResult({
@@ -65,6 +91,63 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startChat = () => {
+    setChatMode(true);
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatMessage.trim() || chatLoading) return;
+
+    const userMessage = chatMessage.trim();
+    setChatMessage("");
+    setChatLoading(true);
+
+    // Add user message to conversation
+    const newHistory = [...conversationHistory, { role: 'user' as const, content: userMessage }];
+    setConversationHistory(newHistory);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: {
+          message: userMessage,
+          conversationHistory: newHistory.slice(0, -1) // Don't include the message we just added
+        }
+      });
+
+      if (error) {
+        console.error('Chat error:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      // Add assistant response to conversation
+      setConversationHistory([...newHistory, { 
+        role: 'assistant', 
+        content: data.message 
+      }]);
+
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      // Add error message to chat
+      setConversationHistory([...newHistory, { 
+        role: 'assistant', 
+        content: 'Sorry, er is een fout opgetreden. Probeer het opnieuw.' 
+      }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
     }
   };
 
@@ -115,7 +198,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
         {/* Results Section */}
         {result && (
           <div className="space-y-6">
-            {/* Answer */}
+            {/* Original Answer */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Resultaat</h2>
               <div className="prose prose-slate max-w-none compact-bullets">
@@ -126,35 +209,123 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
             {/* Sources */}
             {result.sources && result.sources.length > 0 && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Bronnen</h2>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Partij</TableHead>
-                      <TableHead>Pagina</TableHead>
-                      <TableHead>Link</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {result.sources.map((source, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{source.party}</TableCell>
-                        <TableCell>{source.page}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(source.url, '_blank')}
-                            className="gap-2"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            Bekijk document
-                          </Button>
-                        </TableCell>
+                <h3 className="text-lg font-semibold mb-4">
+                  Bronnen ({result.sources.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Partij</TableHead>
+                        <TableHead>Pagina</TableHead>
+                        <TableHead>Document</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {result.sources.map((source, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{source.party}</TableCell>
+                          <TableCell>{source.page}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(source.url, '_blank')}
+                              className="gap-2"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Bekijk document
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            )}
+
+            {/* Chat Interface */}
+            {!chatMode ? (
+              <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      Wil je verder praten over Nederlandse politiek?
+                    </h3>
+                    <p className="text-blue-700 text-sm">
+                      Start een gesprek om dieper in te gaan op de antwoorden en stel vervolgvragen.
+                    </p>
+                  </div>
+                  <Button onClick={startChat} className="bg-blue-600 hover:bg-blue-700 gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Start Chat
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Gesprek over Nederlandse Politiek
+                </h3>
+                
+                {/* Chat History */}
+                <div className="mb-4 max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-4 space-y-4">
+                  {conversationHistory.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] p-3 rounded-lg ${
+                        msg.role === 'user' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white border shadow-sm'
+                      }`}>
+                        <div className="prose prose-sm max-w-none">
+                          {msg.role === 'assistant' ? (
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          ) : (
+                            <p className="m-0">{msg.content}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {chatLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-white border shadow-sm p-3 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm text-gray-600">Aan het typen...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* Chat Input */}
+                <div className="flex gap-2">
+                  <Input
+                    value={chatMessage}
+                    onChange={(e) => setChatMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Stel een vervolgvraag over Nederlandse politiek..."
+                    disabled={chatLoading}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={sendChatMessage}
+                    disabled={!chatMessage.trim() || chatLoading}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Send className="h-4 w-4" />
+                    Verstuur
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Tip: Druk op Enter om je bericht te versturen. Deze chat focust alleen op Nederlandse politiek.
+                </p>
               </Card>
             )}
           </div>
