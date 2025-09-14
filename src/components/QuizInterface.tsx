@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeWeightSetup, ThemeWeights } from "./ThemeWeightSetup";
 
@@ -23,6 +24,7 @@ interface QuizInterfaceProps {
 
 export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfaceProps) => {
   const [showThemeSetup, setShowThemeSetup] = useState(true);
+  const [showWeights, setShowWeights] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
   const [themeWeights, setThemeWeights] = useState<ThemeWeights>({
@@ -58,6 +60,26 @@ export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfacePr
     setShowThemeSetup(false);
   };
 
+  const handleWeightChange = (themeKey: keyof ThemeWeights, value: number) => {
+    setThemeWeights(prev => ({
+      ...prev,
+      [themeKey]: value
+    }));
+  };
+
+  const themes = [
+    { key: "Zorg & Welzijn" as keyof ThemeWeights, label: "Zorg & Welzijn" },
+    { key: "Wonen" as keyof ThemeWeights, label: "Wonen" },
+    { key: "Klimaat & Milieu" as keyof ThemeWeights, label: "Klimaat & Milieu" },
+    { key: "Onderwijs" as keyof ThemeWeights, label: "Onderwijs" },
+    { key: "Economie & Financiën" as keyof ThemeWeights, label: "Economie & Financiën" },
+    { key: "Immigratie & Integratie" as keyof ThemeWeights, label: "Immigratie & Integratie" },
+    { key: "Veiligheid & Defensie" as keyof ThemeWeights, label: "Veiligheid & Defensie" },
+    { key: "Europa & Buitenland" as keyof ThemeWeights, label: "Europa & Buitenland" },
+    { key: "Veiligheid & Justitie" as keyof ThemeWeights, label: "Veiligheid & Justitie" },
+    { key: "Werk & Sociale Zekerheid" as keyof ThemeWeights, label: "Werk & Sociale Zekerheid" },
+  ];
+
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
@@ -87,13 +109,64 @@ export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfacePr
               <ChevronLeft className="h-4 w-4" />
               Terug
             </Button>
-            <span className="text-sm text-muted-foreground">
-              Vraag {currentQuestionIndex + 1} van {questions.length}
-            </span>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowWeights(!showWeights)}
+                className="gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Belangweging
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Vraag {currentQuestionIndex + 1} van {questions.length}
+              </span>
+            </div>
           </div>
           
           <Progress value={progress} className="h-2" />
         </div>
+
+        {/* Theme Weights Panel */}
+        {showWeights && (
+          <Card className="p-6 mb-6 border-primary/20">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Belangweging per thema</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowWeights(false)}
+                >
+                  Sluiten
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {themes.map((theme) => (
+                  <div key={theme.key} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-sm">{theme.label}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {themeWeights[theme.key]}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[themeWeights[theme.key]]}
+                      onValueChange={(value) => handleWeightChange(theme.key, value[0])}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Pas de belangweging aan om te bepalen hoe zwaar verschillende thema's meetellen in je eindresultaat.
+              </p>
+            </div>
+          </Card>
+        )}
 
         {/* Question Card */}
         <div className="max-w-4xl mx-auto">
