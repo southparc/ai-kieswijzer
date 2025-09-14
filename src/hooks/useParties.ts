@@ -47,10 +47,10 @@ const PARTY_DESCRIPTIONS: Record<string, string> = {
   'Vrij Verbond': 'Partij die zich inzet voor vrijheid, soevereiniteit en democratische waarden.'
 };
 
-// Canonical list to guarantee at least 18 parties in the quiz
+// Canonical list to guarantee 16 parties in the quiz (top Dutch parties)
 const DEFAULT_PARTY_NAMES = [
   'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
-  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK','50PLUS','Vrij Verbond'
+  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK'
 ];
 
 // Generate default positions for parties based on their political orientation
@@ -125,6 +125,7 @@ export const useParties = () => {
       // Add any missing parties from the canonical list (for completeness)
       DEFAULT_PARTY_NAMES.forEach((name) => {
         if (!partyMap.has(name)) {
+          console.log(`Adding missing party: ${name}`);
           partyMap.set(name, {
             id: crypto.randomUUID(),
             party: name,
@@ -136,6 +137,8 @@ export const useParties = () => {
           } as unknown as DatabaseParty);
         }
       });
+
+      console.log(`Total parties after adding defaults: ${partyMap.size}`);
 
       // Convert to Party objects and sort by name
       const formattedParties: Party[] = Array.from(partyMap.values())
