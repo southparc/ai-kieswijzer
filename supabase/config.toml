@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.ingest_from_storage]
 verify_jwt = false
+
+[functions.rag_health]
+verify_jwt = false

@@ -167,6 +167,9 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
   const [ingestLoading, setIngestLoading] = useState(false);
   
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [health, setHealth] = useState<any | null>(null);
+  
   const handleIngestFromStorage = async () => {
     setIngestLoading(true);
     try {
@@ -185,6 +188,21 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Indexeren vanuit Storage mislukt.', variant: 'destructive' });
     } finally {
       setIngestLoading(false);
+    }
+  };
+
+  const handleHealthCheck = async () => {
+    setHealthLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rag_health', {});
+      if (error) throw error;
+      setHealth(data);
+      toast({ title: 'RAG status', description: `Partijen: ${data?.parties?.length ?? 0}, chunks: ${data?.total_chunks ?? 0}, placeholders: ${data?.placeholders ?? 0}` });
+    } catch (e) {
+      console.error('Health check error:', e);
+      toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Health check mislukt', variant: 'destructive' });
+    } finally {
+      setHealthLoading(false);
     }
   };
 
