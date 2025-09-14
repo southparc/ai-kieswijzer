@@ -80,7 +80,7 @@ async function createEmbedding(input: string) {
   return data.data[0].embedding as number[];
 }
 
-// Extract text from PDF using pdf.js in the Edge runtime (no placeholders)
+// Extract text from PDF using pdfjs-serverless for edge environments
 async function extractPdfText(publicUrl: string, filename: string): Promise<string> {
   try {
     console.log(`Processing PDF: ${filename}`);
@@ -92,22 +92,24 @@ async function extractPdfText(publicUrl: string, filename: string): Promise<stri
     const data = new Uint8Array(buffer);
     console.log(`Fetched PDF ${filename}: ${data.length} bytes`);
 
-    // 2) Load pdf.js dynamically via esm.sh and configure worker for Deno
-    console.log(`Loading pdf.js for ${filename}...`);
-    const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs");
-    console.log(`pdf.js loaded for ${filename}`);
+    // 2) Load pdfjs-serverless - designed for serverless environments with zero dependencies
+    console.log(`Loading pdfjs-serverless for ${filename}...`);
+    const { getDocument } = await import("https://esm.sh/pdfjs-serverless@1.0.1");
+    console.log(`pdfjs-serverless loaded for ${filename}`);
 
-    const loadingTask = pdfjs.getDocument({ data, disableWorker: true });
-    const pdf = await loadingTask.promise;
-    console.log(`PDF loaded for ${filename}: ${pdf.numPages} pages`);
+    const document = await getDocument({
+      data,
+      useSystemFonts: true,
+    }).promise;
+    console.log(`PDF loaded for ${filename}: ${document.numPages} pages`);
 
     // 3) Extract plain text for each page and concatenate
     const pages: string[] = [];
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      console.log(`Processing page ${pageNum}/${pdf.numPages} of ${filename}`);
-      const page = await pdf.getPage(pageNum);
-      const txt = await page.getTextContent();
-      const pageText = txt.items
+    for (let pageNum = 1; pageNum <= document.numPages; pageNum++) {
+      console.log(`Processing page ${pageNum}/${document.numPages} of ${filename}`);
+      const page = await document.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
         .map((item: any) => (typeof item?.str === 'string' ? item.str : ''))
         .join(' ')
         .replace(/\s+/g, ' ')

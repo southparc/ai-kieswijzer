@@ -51,15 +51,17 @@ const pdfRes = await fetch(url);
 if (!pdfRes.ok) throw new Error(`Failed to fetch PDF (${pdfRes.status})`);
 const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
 
-// 2) Load pdf.js dynamically and extract text per page
-const pdfjs: any = await import('https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs');
-const loadingTask = pdfjs.getDocument({ data: pdfBytes, disableWorker: true });
-const pdfDoc = await loadingTask.promise;
+// 2) Load pdfjs-serverless and extract text per page
+const { getDocument } = await import('https://esm.sh/pdfjs-serverless@1.0.1');
+const document = await getDocument({
+  data: pdfBytes,
+  useSystemFonts: true,
+}).promise;
 const pageTexts: string[] = [];
-for (let p = 1; p <= pdfDoc.numPages; p++) {
-  const page = await pdfDoc.getPage(p);
-  const tc = await page.getTextContent();
-  const text = tc.items.map((it: any) => (typeof it?.str === 'string' ? it.str : '')).join(' ').replace(/\s+/g, ' ').trim();
+for (let p = 1; p <= document.numPages; p++) {
+  const page = await document.getPage(p);
+  const textContent = await page.getTextContent();
+  const text = textContent.items.map((it: any) => (typeof it?.str === 'string' ? it.str : '')).join(' ').replace(/\s+/g, ' ').trim();
   if (text) pageTexts.push(`[Pagina ${p}]\n${text}`);
 }
 const fullText = pageTexts.join('\n\n');
