@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeWeightSetup, ThemeWeights } from "./ThemeWeightSetup";
 
 export type Answer = "agree" | "disagree" | "neutral" | null;
 
@@ -16,13 +17,26 @@ export interface Question {
 
 interface QuizInterfaceProps {
   questions: Question[];
-  onComplete: (answers: Record<number, Answer>) => void;
+  onComplete: (answers: Record<number, Answer>, themeWeights: ThemeWeights) => void;
   onBack: () => void;
 }
 
 export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfaceProps) => {
+  const [showThemeSetup, setShowThemeSetup] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
+  const [themeWeights, setThemeWeights] = useState<ThemeWeights>({
+    "Zorg & Welzijn": 50,
+    "Wonen": 50,
+    "Klimaat & Milieu": 50,
+    "Immigratie & Integratie": 50,
+    "Onderwijs": 50,
+    "Economie & Financiën": 50,
+    "Veiligheid & Defensie": 50,
+    "Europa & Buitenland": 50,
+    "Veiligheid & Justitie": 50,
+    "Werk & Sociale Zekerheid": 50,
+  });
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
@@ -36,8 +50,12 @@ export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfacePr
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
-      onComplete(answers);
+      onComplete(answers, themeWeights);
     }
+  };
+
+  const handleStartQuiz = () => {
+    setShowThemeSetup(false);
   };
 
   const handlePrevious = () => {
@@ -48,6 +66,16 @@ export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfacePr
 
   const canProceed = currentAnswer !== null && currentAnswer !== undefined;
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+  if (showThemeSetup) {
+    return (
+      <ThemeWeightSetup
+        themeWeights={themeWeights}
+        setThemeWeights={setThemeWeights}
+        onContinue={handleStartQuiz}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-background">

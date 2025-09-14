@@ -1,32 +1,43 @@
 import { Party, PartyResult, QuestionBreakdown } from "@/types/party";
-import { Answer } from "@/components/QuizInterface";
+import { Answer, Question } from "@/components/QuizInterface";
+import { ThemeWeights } from "@/components/ThemeWeightSetup";
 
 export const calculateResults = (
   answers: Record<number, Answer>, 
-  parties: Party[]
+  parties: Party[],
+  questions: Question[],
+  themeWeights: ThemeWeights
 ): PartyResult[] => {
   if (!parties || parties.length === 0) {
     return [];
   }
 
+  // Create a map of question IDs to their categories for easy lookup
+  const questionCategories = questions.reduce((acc, question) => {
+    acc[question.id] = question.category as keyof ThemeWeights;
+    return acc;
+  }, {} as Record<number, keyof ThemeWeights>);
+
   return parties.map(party => {
-    let matches = 0;
+    let weightedMatches = 0;
+    let totalPossibleWeight = 0;
     let agreements = 0;
     let disagreements = 0;
-    let totalComparisons = 0;
     const breakdown: QuestionBreakdown[] = [];
 
     Object.entries(answers).forEach(([questionId, userAnswer]) => {
       const qId = parseInt(questionId);
       const partyAnswer = party.positions[qId];
+      const questionCategory = questionCategories[qId];
       
-      if (userAnswer && partyAnswer) {
-        totalComparisons++;
+      if (userAnswer && partyAnswer && questionCategory) {
+        const weight = themeWeights[questionCategory] / 100; // Convert percentage to weight
+        totalPossibleWeight += weight;
         
         if (userAnswer === partyAnswer) {
           // Exact matches
           if (userAnswer === "agree") {
-            matches++;
+            weightedMatches += weight;
             agreements++;
             breakdown.push({
               questionId: qId,
@@ -35,8 +46,8 @@ export const calculateResults = (
               result: "agreement"
             });
           } else if (userAnswer === "disagree") {
-            matches++;
-            agreements++; // Changed: disagreeing together is also an agreement
+            weightedMatches += weight;
+            agreements++; // Disagreeing together is also an agreement
             breakdown.push({
               questionId: qId,
               userAnswer,
@@ -44,8 +55,8 @@ export const calculateResults = (
               result: "agreement"
             });
           } else {
-            // Both neutral - minimal credit
-            matches += 0.3;
+            // Both neutral - partial credit
+            weightedMatches += weight * 0.3;
             breakdown.push({
               questionId: qId,
               userAnswer,
@@ -66,9 +77,9 @@ export const calculateResults = (
             });
           } else if ((userAnswer === "neutral" && partyAnswer !== "neutral") || 
                      (userAnswer !== "neutral" && partyAnswer === "neutral")) {
-            // One is neutral, other has position - count as minor difference
-            matches += 0.1;
-            disagreements++; // Changed: count neutral vs position as disagreement
+            // One is neutral, other has position - minimal credit
+            weightedMatches += weight * 0.1;
+            disagreements++;
             breakdown.push({
               questionId: qId,
               userAnswer,
@@ -80,13 +91,13 @@ export const calculateResults = (
       }
     });
 
-    const matchPercentage = totalComparisons > 0 
-      ? Math.round((matches / totalComparisons) * 100) 
+    const matchPercentage = totalPossibleWeight > 0 
+      ? Math.round((weightedMatches / totalPossibleWeight) * 100) 
       : 0;
 
     return {
       party,
-      score: matches,
+      score: weightedMatches,
       percentage: matchPercentage,
       agreements,
       disagreements,

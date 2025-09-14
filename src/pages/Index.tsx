@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { LandingPage } from "@/components/LandingPage";
 import { AdvicePage } from "@/components/AdvicePage";
-import { QuizInterface } from "@/components/QuizInterface";
+import { QuizInterface, Answer } from "@/components/QuizInterface";
 import { ResultsPage } from "@/components/ResultsPage";
 import { useQuestions } from "@/hooks/useQuestions";
 import { calculateResults } from "@/utils/calculateResults";
 import { PartyResult } from "@/types/party";
 import { useParties } from "@/hooks/useParties";
 import { Button } from "@/components/ui/button";
+import { ThemeWeights } from "@/components/ThemeWeightSetup";
 
 // App state
 type AppState = "landing" | "advice" | "quiz" | "results";
@@ -22,9 +23,9 @@ const Index = () => {
   const handleStartQuiz = () => setAppState("quiz");
   const handleBackToLanding = () => setAppState("landing");
 
-  const handleQuizComplete = (answers: Record<number, any>) => {
+  const handleQuizComplete = (answers: Record<number, Answer>, themeWeights: ThemeWeights) => {
     if (!parties || parties.length === 0 || !questions || questions.length === 0) return;
-    const results = calculateResults(answers, parties);
+    const results = calculateResults(answers, parties, questions, themeWeights);
     setQuizResults(results);
     setAppState("results");
   };

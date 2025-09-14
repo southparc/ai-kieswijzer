@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,23 +27,9 @@ interface DocumentStats {
   lastUpdate: string;
 }
 
-const themes = [
-  { key: "zorg", label: "Zorg", color: "bg-red-500" },
-  { key: "wonen", label: "Wonen", color: "bg-blue-500" },
-  { key: "klimaat", label: "Klimaat", color: "bg-green-500" },
-  { key: "migratie", label: "Migratie", color: "bg-orange-500" },
-  { key: "onderwijs", label: "Onderwijs", color: "bg-purple-500" },
-];
 
 export const AdvicePage = ({ onBack }: AdvicePageProps) => {
   const [question, setQuestion] = useState("");
-  const [themeWeights, setThemeWeights] = useState<Record<string, number>>({
-    zorg: 50,
-    wonen: 50,
-    klimaat: 50,
-    migratie: 50,
-    onderwijs: 50,
-  });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdviceResult | null>(null);
   const [stats, setStats] = useState<DocumentStats>({ docCount: 0, lastUpdate: "" });
@@ -62,8 +47,6 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
       const { data, error } = await supabase.functions.invoke('ask', {
         body: {
           question: question,
-          themes: Object.keys(themeWeights),
-          weights: themeWeights,
           ip: "127.0.0.1" // This will be replaced with actual IP in production
         }
       });
@@ -100,32 +83,6 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
         {/* Input Section */}
         <Card className="p-6 mb-8">
           <div className="space-y-6">
-            {/* Theme Sliders */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Thema's (belangweging)</h3>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {themes.map((theme) => (
-                  <div key={theme.key} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{theme.label}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {themeWeights[theme.key]}%
-                      </span>
-                    </div>
-                    <Slider
-                      value={[themeWeights[theme.key]]}
-                      onValueChange={(value) =>
-                        setThemeWeights(prev => ({ ...prev, [theme.key]: value[0] }))
-                      }
-                      max={100}
-                      step={10}
-                      className="w-full"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Question Input */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Jouw vraag</h3>
