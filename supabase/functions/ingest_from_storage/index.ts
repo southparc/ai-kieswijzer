@@ -90,16 +90,21 @@ async function extractPdfText(publicUrl: string, filename: string): Promise<stri
     if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`);
     const buffer = await res.arrayBuffer();
     const data = new Uint8Array(buffer);
+    console.log(`Fetched PDF ${filename}: ${data.length} bytes`);
 
     // 2) Load pdf.js dynamically via esm.sh and configure worker for Deno
-const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs");
+    console.log(`Loading pdf.js for ${filename}...`);
+    const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs");
+    console.log(`pdf.js loaded for ${filename}`);
 
     const loadingTask = pdfjs.getDocument({ data, disableWorker: true });
     const pdf = await loadingTask.promise;
+    console.log(`PDF loaded for ${filename}: ${pdf.numPages} pages`);
 
     // 3) Extract plain text for each page and concatenate
     const pages: string[] = [];
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      console.log(`Processing page ${pageNum}/${pdf.numPages} of ${filename}`);
       const page = await pdf.getPage(pageNum);
       const txt = await page.getTextContent();
       const pageText = txt.items
@@ -109,6 +114,7 @@ const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/
         .trim();
       if (pageText) {
         pages.push(`[Pagina ${pageNum}]\n${pageText}`);
+        console.log(`Page ${pageNum} of ${filename}: ${pageText.length} chars`);
       }
     }
 
@@ -117,11 +123,16 @@ const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/
     console.log(`Extracted ~${full.length} characters from ${filename}`);
     return full;
   } catch (error) {
-    console.error("PDF processing failed:", error);
+    console.error(`PDF processing failed for ${filename}:`, error);
+    // Log the specific error details
+    console.error(`Error type: ${error.constructor.name}`);
+    console.error(`Error message: ${error.message}`);
+    console.error(`Error stack: ${error.stack}`);
+    
     // Fallback: keep a minimal placeholder so ingestion continues,
     // but clearly mark that the source had no extractable text
     const { party, title } = parsePartyAndTitle(filename);
-    return `Geen tekst geëxtraheerd uit ${title} (${party}).`;
+    return `Geen tekst geëxtraheerd uit ${title} (${party}). Error: ${error.message}`;
   }
 }
 
