@@ -80,138 +80,52 @@ async function createEmbedding(input: string) {
   return data.data[0].embedding as number[];
 }
 
-// Extract text from PDF - using party-specific content generation
+// Extract text from PDF using pdf.js in the Edge runtime (no placeholders)
 async function extractPdfText(publicUrl: string, filename: string): Promise<string> {
   try {
     console.log(`Processing PDF: ${filename}`);
-    const { party, title } = parsePartyAndTitle(filename);
-    console.log(`Creating realistic content for ${party}`);
-    
-    // Generate comprehensive party-specific content based on known political positions
-    const partySpecificContent = generatePartySpecificContent(party, title);
-    console.log(`Generated ${partySpecificContent.length} characters of content for ${party}`);
-    
-    return partySpecificContent;
-    
+
+    // 1) Fetch the PDF bytes from public storage URL
+    const res = await fetch(publicUrl);
+    if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`);
+    const buffer = await res.arrayBuffer();
+    const data = new Uint8Array(buffer);
+
+    // 2) Load pdf.js dynamically via esm.sh and disable worker for Deno
+    const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.js");
+    if (pdfjs?.GlobalWorkerOptions) {
+      pdfjs.GlobalWorkerOptions.workerSrc = ""; // disable external worker
+    }
+
+    const loadingTask = pdfjs.getDocument({ data, disableWorker: true });
+    const pdf = await loadingTask.promise;
+
+    // 3) Extract plain text for each page and concatenate
+    const pages: string[] = [];
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const txt = await page.getTextContent();
+      const pageText = txt.items
+        .map((item: any) => (typeof item?.str === 'string' ? item.str : ''))
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (pageText) {
+        pages.push(`[Pagina ${pageNum}]\n${pageText}`);
+      }
+    }
+
+    const full = pages.join("\n\n");
+    if (!full.trim()) throw new Error("Empty text after extraction");
+    console.log(`Extracted ~${full.length} characters from ${filename}`);
+    return full;
   } catch (error) {
     console.error("PDF processing failed:", error);
-    // Ultimate fallback
+    // Fallback: keep a minimal placeholder so ingestion continues,
+    // but clearly mark that the source had no extractable text
     const { party, title } = parsePartyAndTitle(filename);
-    return `Verkiezingsprogramma van ${party}: ${title}. Dit document bevat de standpunten en voorstellen van ${party} voor de verkiezingen.`;
+    return `Geen tekst geëxtraheerd uit ${title} (${party}).`;
   }
-}
-
-// Generate party-specific content based on known political positions
-function generatePartySpecificContent(party: string, title: string): string {
-  const partyPositions: Record<string, any> = {
-    "VVD": {
-      klimaat: "De VVD wil klimaatdoelen bereiken via innovatie en technologie. Kernenergie speelt een belangrijke rol. Marktwerking en ondernemerschap zijn essentieel voor de energietransitie.",
-      economie: "Lagere belastingen voor bedrijven en werkenden. Minder regels en bureaucratie. Sterke concurrentiepositie en vrije markt.",
-      zorg: "Meer marktwerking in de zorg. Eigen risico behouden. Preventie en persoonlijke verantwoordelijkheid stimuleren.",
-      wonen: "Meer bouwen via marktwerking. Minder regulering. Eigen woningbezit stimuleren.",
-      migratie: "Strenge asiel- en migratieregels. Minder instroom, meer uitstroom. Nederlandse normen en waarden centraal."
-    },
-    "GroenLinks-PvdA": {
-      klimaat: "Ambitieuze klimaatdoelen met radicale maatregelen. 100% duurzame energie voor 2030. Just transition voor werknemers. Green New Deal met grote publieke investeringen.",
-      economie: "Groene economie met meer gelijkheid. Vermogensbelasting en progressieve belastingen. Sterke publieke sector en werknemersrechten.",
-      zorg: "Toegankelijke zorg voor iedereen. Eigen risico afschaffen. Preventieve zorg en mentale gezondheid. Meer zorgpersoneel en betere arbeidsvoorwaarden.",
-      wonen: "Massale woningbouwprogramma's met focus op sociale huur. Speculatie tegengaan. Huurverlaging en betaalbare koopwoningen.",
-      migratie: "Humaan en open migratiebeleid. Vluchtelingen welkom. Integratie ondersteunen. Racisme en discriminatie bestrijden."
-    },
-    "D66": {
-      klimaat: "Klimaatdoelen via innovatie en Europese samenwerking. CO2-heffing. Investeren in nieuwe technologieën.",
-      economie: "Kenniseconomie versterken. Ondernemerschap en innovatie. Flexibele arbeidsmarkt.",
-      zorg: "Zorg dichtbij huis. Preventie en e-health. Kwaliteit en toegankelijkheid.",
-      wonen: "Meer bouwen in stedelijke gebieden. Flexibele woningmarkt. Starterswoningen.",
-      migratie: "Europese migratieregels. Integratie via onderwijs en werk. Gemeenschappelijk asielbeleid."
-    },
-    "CDA": {
-      klimaat: "Klimaat en economie in balans. Kernenergie accepteren. Boeren ondersteunen bij transitie.",
-      economie: "Stabiele economie met oog voor MKB. Gezonde overheidsfinanciën. Werk moet lonen.",
-      zorg: "Zorg dichtbij huis. Mantelzorg ondersteunen. Christelijke waarden in zorgverlening.",
-      wonen: "Bouwen in eigen regio. Platteland leefbaar houden. Betaalbare koopwoningen.",
-      migratie: "Maatvolle migratie. Integratie met Nederlandse waarden. Christelijke traditie bewaren."
-    },
-    "SP": {
-      klimaat: "Klimaatmaatregelen zonder gewone mensen te treffen. Publieke investeringen in duurzaamheid.",
-      economie: "Meer gelijkheid via belastingherverdeling. Sterke overheid en publieke sector.",
-      zorg: "Zorg is geen koopwaar. Meer zorgpersoneel en betere arbeidsvoorwaarden.",
-      wonen: "Huurverlaging en meer sociale woningen. Speculatie tegengaan.",
-      migratie: "Humaan asielbeleid met oog voor draagkracht van wijken."
-    },
-    "PVV": {
-      klimaat: "Klimaathysterie stoppen. Nederlandse belangen eerst. Kernenergie uitbreiden. Minder EU-klimaatregels.",
-      economie: "Lagere belastingen voor gewone Nederlanders. Minder EU-regelgeving. Nederlands geld voor Nederlandse problemen.",
-      zorg: "Nederlandse zorg voor Nederlanders. Meer geld naar zorgpersoneel. Eigen risico verlagen.",
-      wonen: "Voorrang voor Nederlanders op woningmarkt. Sociale huurwoningen voor Nederlandse families eerst.",
-      migratie: "Massale immigratie stoppen. Grenzen dicht. Asielstop en remigration. Nederland voor Nederlanders."
-    },
-    "NSC": {
-      klimaat: "Realistische klimaatdoelen met draagvlak. Kernenergie en innovatie. Boeren meenemen in transitie.",
-      economie: "Betrouwbare overheid met gezonde financiën. MKB ondersteunen. Innovatie stimuleren.",
-      zorg: "Toegankelijke zorg met korte wachttijden. Preventie en zelfzorg. Meer zorgprofessionals.",
-      wonen: "Meer woningen bouwen met lokaal draagvlak. Betaalbare woningen voor starters en gezinnen.",
-      migratie: "Gecontroleerde migratie met goede opvang. Succesvolle integratie bevorderen."
-    },
-    "BBB": {
-      klimaat: "Klimaatplannen niet ten koste van boeren. Praktische oplossingen. Nederlandse voedselzekerheid waarborgen.",
-      economie: "Plattelandseconomie versterken. Minder bureaucratie voor ondernemers. Boerenbedrijven ondersteunen.",
-      zorg: "Zorg in landelijke gebieden toegankelijk houden. Dorpshuizen en lokale voorzieningen.",
-      wonen: "Bouwen op het platteland mogelijk maken. Jonge gezinnen in dorpen houden.",
-      migratie: "Migratie mag landelijke gemeenschappen niet overbelasten. Spreiding en draagkracht."
-    },
-    "Partij voor de Dieren": {
-      klimaat: "Radicale klimaatmaatregelen met focus op dierenrechten. Veeteelt drastisch inkrimpen. Plantaardig voedselsysteem.",
-      economie: "Duurzame economie binnen planetaire grenzen. Welzijn van dieren en natuur centraal.",
-      zorg: "Preventieve zorg door gezonde leefomgeving. Minder vlees voor volksgezondheid.",
-      wonen: "Duurzaam bouwen met respect voor natuur. Groene leefomgeving voor mens en dier.",
-      migratie: "Humaan beleid. Oorzaken van vluchten aanpakken, zoals klimaatverandering."
-    },
-    "ChristenUnie": {
-      klimaat: "Rentmeesterschap over de schepping. Duurzame energie met sociale rechtvaardigheid. Kernenergie overwegen.",
-      economie: "Economie ten dienste van de mens. MKB ondersteunen. Eerlijke verdeling van welvaart.",
-      zorg: "Zorg voor kwetsbaren. Bescherming van leven vanaf conceptie. Palliatieve zorg.",
-      wonen: "Betaalbare woningen voor gezinnen. Woningcorporaties versterken. Leefbare wijken.",
-      migratie: "Christelijke naastenliefde. Vluchtelingen helpen. Succesvolle integratie bevorderen."
-    },
-    "Volt": {
-      klimaat: "Europese Green Deal. Ambitieuze klimaatdoelen. Groene innovatie en digitalisering.",
-      economie: "Europese kenniseconomie. Digitale single market. Innovatie en onderwijs.",
-      zorg: "Europese samenwerking in zorg. Digitale zorg en preventie. Toegankelijkheid garanderen.",
-      wonen: "Europese woningmarkt. Sociale woningbouw. Duurzame steden en smart cities.",
-      migratie: "Europees migratiebeleid. Gemeenschappelijke opvang. Legale migratieroutes."
-    },
-    "JA21": {
-      klimaat: "Realistische klimaatdoelen. Kernenergie uitbreiden. Nederlandse concurrentiepositie behouden.",
-      economie: "Vrije markt met minder regeldruk. Belastingen verlagen. Ondernemerschap stimuleren.",
-      zorg: "Zorgkwaliteit verbeteren. Keuzevrijheid behouden. Eigen verantwoordelijkheid.",
-      wonen: "Meer bouwen via marktwerking. Regeldruk verminderen. Eigen woningbezit stimuleren.",
-      migratie: "Gecontroleerde migratie. Integratie verplichten. Nederlandse waarden handhaven."
-    },
-    "BVNL": {
-      klimaat: "Klimaatplannen herzien. Geen energiearmoede. Nederlandse industrie beschermen.",
-      economie: "Nederlandse soevereiniteit. Minder EU-regelgeving. MKB ondersteunen.",
-      zorg: "Nederlandse zorg voor Nederlandse burgers. Meer zeggenschap voor patiënten.",
-      wonen: "Woningnood aanpakken. Minder regels voor nieuwbouw. Betaalbare woningen.",
-      migratie: "Migratiecrisis oplossen. Grenzen bewaken. Asielstroom beperken."
-    },
-    "FvD": {
-      klimaat: "Klimaatplannen kritisch bekijken. Nederlandse belangen voorop. Minder EU-regulering.",
-      economie: "Nederlandse economische soevereiniteit. Minder globalisme en EU-regels.",
-      zorg: "Nederlandse zorg voor Nederlandse burgers eerst. Eigen verantwoordelijkheid.",
-      wonen: "Voorrang voor Nederlanders op woningmarkt. Minder internationale speculatie.",
-      migratie: "Massale immigratie stoppen. Nederlandse cultuur beschermen. Remigration."
-    }
-  };
-
-  const positions = partyPositions[party] || {};
-  
-  // Create comprehensive content
-  const sections = Object.entries(positions).map(([topic, position]) => 
-    `${party} over ${topic}:\n${position}\n\nDit standpunt is uitgewerkt in ${title} met concrete beleidsvoorstellen en maatregelen.`
-  );
-
-  return sections.join('\n\n');
 }
 
 function chunkText(text: string, chunkSize = 1200, overlap = 100): string[] {
