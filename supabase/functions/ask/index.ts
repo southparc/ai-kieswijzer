@@ -202,7 +202,9 @@ serve(async (req) => {
     // First, add the best matching content for each party
     (ragResults || []).forEach((result: any) => {
       const normalizedParty = guessParty(`${result.party} ${result.title} ${result.url}`, result.party);
-      if (!partyContent.has(normalizedParty)) {
+      const text = String(result.content || '').toLowerCase();
+      const isPlaceholder = text.includes('geen tekst geëxtraheerd');
+      if (!isPlaceholder && !partyContent.has(normalizedParty)) {
         partyContent.set(normalizedParty, {
           ...result,
           party_norm: normalizedParty
@@ -228,14 +230,16 @@ serve(async (req) => {
             )
           `)
           .in('documents.party', originals)
-          .limit(1);
+          .limit(5);
 
         if (partyChunksError) {
           console.log('Error fetching fallback chunk for', normalizedParty, partyChunksError);
         }
 
-        if (partyChunks && partyChunks.length > 0) {
-          const chunk = partyChunks[0];
+        const firstReal = (partyChunks || []).find((c: any) => !String(c.content || '').toLowerCase().includes('geen tekst geëxtraheerd'));
+
+        if (firstReal) {
+          const chunk = firstReal;
           partyContent.set(normalizedParty, {
             content: chunk.content,
             page: chunk.page,
@@ -245,7 +249,7 @@ serve(async (req) => {
             url: chunk.documents.url
           });
         } else {
-          console.log(`No content found for party (normalized): ${normalizedParty} | originals tried: ${originals.join(', ')}`);
+          console.log(`No real content found for party (normalized): ${normalizedParty} | originals tried: ${originals.join(', ')}`);
         }
       }
     }
