@@ -20,6 +20,7 @@ const PARTY_COLORS: Record<string, string> = {
   'BVNL': '#8B4513',
   'SGP': '#2C5282',
   'DENK': '#00A79D',
+  'Vrij Verbond': '#4B5563',
   // Fallback colors for any additional parties
   'default': '#6B7280'
 };
@@ -42,13 +43,14 @@ const PARTY_DESCRIPTIONS: Record<string, string> = {
   'BVNL': 'Partij die zich inzet voor Nederlandse soevereiniteit en democratische waarden.',
   'SGP': 'Staatkundig Gereformeerde Partij met focus op christelijke waarden en traditie.',
   'DENK': 'Partij die zich inzet voor diversiteit, gelijkwaardigheid en gelijke kansen.',
-  '50PLUS': 'Partij die opkomt voor de belangen van 50-plussers en ouderen.'
+  '50PLUS': 'Partij die opkomt voor de belangen van 50-plussers en ouderen.',
+  'Vrij Verbond': 'Partij die zich inzet voor vrijheid, soevereiniteit en democratische waarden.'
 };
 
-// Canonical list to guarantee at least 17 parties in the quiz
+// Canonical list to guarantee at least 18 parties in the quiz
 const DEFAULT_PARTY_NAMES = [
   'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
-  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK','50PLUS'
+  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK','50PLUS','Vrij Verbond'
 ];
 
 // Generate default positions for parties based on their political orientation
