@@ -91,13 +91,13 @@ async function extractPdfText(publicUrl: string, filename: string): Promise<stri
     const buffer = await res.arrayBuffer();
     const data = new Uint8Array(buffer);
 
-    // 2) Load pdf.js dynamically via esm.sh and disable worker for Deno
-    const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.js");
-    if (pdfjs?.GlobalWorkerOptions) {
-      pdfjs.GlobalWorkerOptions.workerSrc = ""; // disable external worker
-    }
+    // 2) Load pdf.js dynamically via esm.sh and configure worker for Deno
+    const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs");
+    
+    // Configure worker source for Deno environment
+    pdfjs.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.worker.mjs';
 
-    const loadingTask = pdfjs.getDocument({ data, disableWorker: true });
+    const loadingTask = pdfjs.getDocument({ data });
     const pdf = await loadingTask.promise;
 
     // 3) Extract plain text for each page and concatenate
