@@ -178,7 +178,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     try {
       console.log('[Admin] Invoking ingest_from_storage...');
       const { data, error } = await supabase.functions.invoke('ingest_from_storage', {
-        body: { reingest: true, defaultYear: new Date().getFullYear() }
+        body: { reingest: true, defaultYear: new Date().getFullYear(), maxFiles: 25 }
       });
       console.log('[Admin] ingest_from_storage result:', { data, error });
       if (error) throw error;

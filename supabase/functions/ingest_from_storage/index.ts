@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
+import { getDocument } from "https://esm.sh/pdfjs-serverless@1.0.1";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -21,6 +21,7 @@ interface IngestRequest {
   reingest?: boolean; // if true, process even if document/url exists
   defaultYear?: number | null;
   defaultVersion?: string | null;
+  maxFiles?: number | null; // limit number of files per run to avoid timeouts
 }
 
 function parsePartyAndTitle(filename: string) {
@@ -60,7 +61,7 @@ function parsePartyAndTitle(filename: string) {
   return { party, title: humanTitle };
 }
 
-async function createEmbedding(input: string) {
+async function createEmbeddings(inputs: string[]) {
   if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not set");
   const res = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
@@ -70,7 +71,7 @@ async function createEmbedding(input: string) {
     },
     body: JSON.stringify({
       model: "text-embedding-3-small",
-      input,
+      input: inputs,
     }),
   });
   if (!res.ok) {
@@ -78,7 +79,12 @@ async function createEmbedding(input: string) {
     throw new Error(`Embedding API error ${res.status}: ${text}`);
   }
   const data = await res.json();
-  return data.data[0].embedding as number[];
+  return (data.data || []).map((d: any) => d.embedding as number[]);
+}
+
+async function createEmbedding(input: string) {
+  const [embedding] = await createEmbeddings([input]);
+  return embedding;
 }
 
 // Extract text from PDF using pdfjs-serverless for edge environments
@@ -93,11 +99,7 @@ async function extractPdfText(publicUrl: string, filename: string): Promise<stri
     const data = new Uint8Array(buffer);
     console.log(`Fetched PDF ${filename}: ${data.length} bytes`);
 
-    // 2) Load pdfjs-serverless - designed for serverless environments with zero dependencies
-    console.log(`Loading pdfjs-serverless for ${filename}...`);
-    const { getDocument } = await import("https://esm.sh/pdfjs-serverless@1.0.1");
-    console.log(`pdfjs-serverless loaded for ${filename}`);
-
+    // 2) Use preloaded pdfjs-serverless (imported at top-level)
     const document = await getDocument({
       data,
       useSystemFonts: true,
@@ -185,7 +187,13 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Found ${files.length} files to process`);
+    // Keep only PDFs, order deterministically and cap per run
+    files = files.filter((name) => name.toLowerCase().endsWith(".pdf"));
+    const maxFiles = Math.min(Math.max(Number((body as any).maxFiles ?? 20), 1), 100);
+    files.sort((a, b) => a.localeCompare(b));
+    const selected = files.slice(0, maxFiles);
+
+    console.log(`Found ${files.length} PDFs, processing ${selected.length} this run (maxFiles=${maxFiles})`);
 
     const results: Array<{
       file: string;
@@ -195,7 +203,7 @@ serve(async (req) => {
       chunks?: number;
     }> = [];
 
-    for (const name of files) {
+    for (const name of selected) {
       try {
         const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(name);
         const publicUrl = pub.publicUrl;
@@ -252,9 +260,18 @@ serve(async (req) => {
           embedding: number[];
         }> = [];
 
+        // Batch embeddings for speed and fewer HTTP calls
+        const EMBED_BATCH = 96;
+        const embeddings: number[][] = [];
+        for (let i = 0; i < parts.length; i += EMBED_BATCH) {
+          const batch = parts.slice(i, i + EMBED_BATCH);
+          const e = await createEmbeddings(batch);
+          embeddings.push(...e);
+        }
+
         for (let i = 0; i < parts.length; i++) {
           const part = parts[i];
-          const embedding = await createEmbedding(part);
+          const embedding = embeddings[i];
           rows.push({
             document_id: documentId!,
             content: part,
