@@ -14,6 +14,12 @@ const supabase = createClient(
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+// Available parties - must match the 16 parties in the frontend
+const AVAILABLE_PARTIES = [
+  'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
+  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK'
+];
+
 // Guess party from text/title/url when DB label is wrong
 function guessParty(text: string, fallback: string) {
   const t = (text || '').toLowerCase();
@@ -110,10 +116,37 @@ serve(async (req) => {
 
     console.log('Generated embedding');
 
-    // First, get all distinct parties from the database
+    // Check if the question is about a party not in our available list
+    const questionLower = question.toLowerCase();
+    const unavailablePartyMentioned = ['vrij verbond', '50plus', 'lijst', 'lokale partij'].some(party => 
+      questionLower.includes(party)
+    );
+
+    if (unavailablePartyMentioned) {
+      // Return early for unavailable parties
+      const unavailableResponse = `Deze vraag gaat over een partij die niet beschikbaar is in onze database. Ik kan alleen informatie geven over de volgende ${AVAILABLE_PARTIES.length} partijen die deelnemen aan de verkiezingen van 2025:
+
+${AVAILABLE_PARTIES.map(party => `• ${party}`).join('\n')}
+
+Stel je vraag opnieuw over een van deze partijen en ik geef je een uitgebreide analyse op basis van hun officiële verkiezingsprogramma's.`;
+
+      return new Response(
+        JSON.stringify({
+          answer: unavailableResponse,
+          sources: [],
+          query_id: queryData.id
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Only work with available parties from the database
     const { data: allParties, error: partiesError } = await supabase
       .from('documents')
       .select('party')
+      .in('party', AVAILABLE_PARTIES)
       .order('party');
 
     if (partiesError) {
@@ -121,8 +154,8 @@ serve(async (req) => {
       throw partiesError;
     }
 
-    const uniqueParties = [...new Set(allParties?.map(p => p.party) || [])];
-    console.log('All parties in database:', uniqueParties.join(', '));
+    const availableParties = [...new Set(allParties?.map(p => p.party) || [])];
+    console.log('Available parties in database:', availableParties.join(', '));
 
     // Search for relevant chunks using the RAG function (fetch many more)
     const { data: ragResults, error: ragError } = await supabase
@@ -152,8 +185,8 @@ serve(async (req) => {
       }
     });
 
-    // For any missing parties, fetch their content directly
-    for (const party of uniqueParties) {
+    // For any missing parties from available list, fetch their content directly
+    for (const party of availableParties) {
       const normalizedParty = guessParty(party, party);
       if (!partyContent.has(normalizedParty)) {
         // Get any content for this party
@@ -182,26 +215,32 @@ serve(async (req) => {
             url: chunk.documents.url
           });
         } else {
-          // Fallback: create basic content if no chunks found
-          partyContent.set(normalizedParty, {
-            content: `${normalizedParty} heeft standpunten over verschillende beleidsterreinen zoals beschreven in hun verkiezingsprogramma.`,
-            page: 1,
-            party: party,
-            party_norm: normalizedParty,
-            title: `${normalizedParty} Verkiezingsprogramma`,
-            url: '#'
-          });
+          // Don't create fallback content - only use real program data
+          console.log(`No content found for party: ${normalizedParty}`);
         }
       }
     }
 
     const allPartyResults = Array.from(partyContent.values());
-    console.log('Final parties included:', allPartyResults.map(r => r.party_norm).join(', '));
+    console.log('Final parties with content:', allPartyResults.map(r => r.party_norm).join(', '));
 
-    // Prepare context from ALL parties
-    const context = allPartyResults.length > 0
-      ? allPartyResults.map((result: any) => `**${result.party_norm}** (pagina ${result.page}): ${result.content}`).join('\n\n')
-      : 'Geen relevante informatie gevonden.';
+    if (allPartyResults.length === 0) {
+      return new Response(
+        JSON.stringify({
+          answer: 'Er is geen relevante informatie gevonden in de beschikbare verkiezingsprogramma\'s. Probeer je vraag anders te formuleren.',
+          sources: [],
+          query_id: queryData.id
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Prepare context from parties with actual content
+    const context = allPartyResults.map((result: any) => 
+      `**${result.party_norm}** (pagina ${result.page}): ${result.content}`
+    ).join('\n\n');
 
     // Generate AI response
     const completion = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -215,31 +254,31 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Je bent een Nederlandse politieke adviseur die gedetailleerde, grondige analyses geeft van partijstandpunten. 
+            content: `Je bent een Nederlandse politieke adviseur die uitsluitend werkt met de officiële verkiezingsprogramma's van 2025. 
 
-BELANGRIJK: Geef uitgebreide, betekenisvolle antwoorden met concrete details en voorbeelden.
+**KRITIEKE REGEL: Gebruik ALLEEN informatie uit de gegeven context van de ${AVAILABLE_PARTIES.length} beschikbare partijen.**
 
-**VERPLICHT: Behandel ALLE ${allPartyResults.length} partijen die in de context staan - laat geen enkele partij weg.**
+Beschikbare partijen: ${AVAILABLE_PARTIES.join(', ')}
 
-Regels:
-- Gebruik alleen informatie uit de gegeven context
-- Geef per partij een **uitgebreide paragraaf** (minimaal 3-4 zinnen) met:
-  * Specifieke beleidsvoorstellen 
+Antwoordregels:
+- Gebruik UITSLUITEND informatie uit de gegeven context
+- Als een partij niet in de context staat, vermeld je deze NIET
+- Geef per aanwezige partij een uitgebreide paragraaf met:
+  * Specifieke beleidsvoorstellen uit hun programma
   * Concrete doelstellingen en cijfers waar mogelijk
-  * Onderliggende filosofie/motivatie
-  * Praktische implementatie of gevolgen
-- **Gebruik altijd deze structuur**: ## Partijnaam, gevolgd door een uitgebreide paragraaf
-- Vermeld specifieke citaten uit documenten waar relevant
-- Leg verbanden tussen verschillende aspecten van het beleid
-- Blijf objectief maar geef voldoende detail om de standpunten echt te begrijpen
-- Gebruik markdown voor duidelijke opmaak
-- **ALLE ${allPartyResults.length} partijen moeten behandeld worden - geen uitzonderingen**
+  * Onderliggende motivatie
+- **Gebruik deze structuur**: ## Partijnaam, gevolgd door een uitgebreide paragraaf
+- Als er onvoldoende informatie is, zeg dan eerlijk dat er meer details nodig zijn
+- Blijf binnen de grenzen van de beschikbare programma-informatie
+- VERZIN GEEN informatie die niet in de context staat
 
-Voorbeeld van gewenste detailniveau:
+Voorbeeld structuur:
 ## Partijnaam
-De partij wil [specifiek voorstel] door middel van [concrete maatregelen]. Dit betekent in de praktijk dat [uitleg gevolgen]. Hun motivatie hiervoor is [onderliggende filosofie] en ze stellen voor om dit te financieren via [financieringsvoorstel]. Volgens hun programma willen ze [specifiek doel met cijfer] bereiken binnen [tijdsbestek].
+Volgens hun verkiezingsprogramma wil [partij] [specifiek voorstel uit context]. [Verdere details uit de context].
 
-Context van partijprogramma's:
+WAARSCHUWING: Antwoord NOOIT over partijen die niet in de context staan!
+
+Context van officiële verkiezingsprogramma's 2025:
 ${context}`
           },
           {
