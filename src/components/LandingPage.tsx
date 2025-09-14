@@ -45,7 +45,7 @@ Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijpr
               
               {/* Version */}
               <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                <span>v 0.31</span>
+                <span>v 0.32</span>
               </div>
             </div>
             <div className="relative">
