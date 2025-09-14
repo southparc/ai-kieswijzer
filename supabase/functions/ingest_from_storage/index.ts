@@ -92,7 +92,7 @@ async function extractPdfText(publicUrl: string, filename: string): Promise<stri
     const data = new Uint8Array(buffer);
 
     // 2) Load pdf.js dynamically via esm.sh and configure worker for Deno
-const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/build/pdf.mjs");
+const pdfjs: any = await import("https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs");
 
     const loadingTask = pdfjs.getDocument({ data, disableWorker: true });
     const pdf = await loadingTask.promise;

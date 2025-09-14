@@ -52,7 +52,7 @@ if (!pdfRes.ok) throw new Error(`Failed to fetch PDF (${pdfRes.status})`);
 const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
 
 // 2) Load pdf.js dynamically and extract text per page
-const pdfjs: any = await import('https://esm.sh/pdfjs-dist@4.4.168/build/pdf.mjs');
+const pdfjs: any = await import('https://esm.sh/pdfjs-dist@4.4.168/legacy/build/pdf.mjs');
 const loadingTask = pdfjs.getDocument({ data: pdfBytes, disableWorker: true });
 const pdfDoc = await loadingTask.promise;
 const pageTexts: string[] = [];
