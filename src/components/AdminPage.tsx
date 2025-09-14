@@ -132,7 +132,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         .getPublicUrl(fileName);
 
       // Call ingest function
-      const { error: ingestError } = await supabase.functions.invoke('ingest', {
+      const { data: ingestData, error: ingestError } = await supabase.functions.invoke('ingest', {
         body: {
           party: formData.party,
           title: formData.title,
@@ -142,11 +142,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         }
       });
 
-      if (ingestError) throw ingestError;
+      if (ingestError) {
+        console.error('[Admin] Ingest error:', { ingestError, ingestData });
+        throw new Error((ingestData as any)?.details || (ingestData as any)?.error || ingestError.message);
+      }
 
       toast({
         title: "Succes",
-        description: "Document succesvol geüpload en verwerkt."
+        description: (ingestData as any)?.message || "Document succesvol geüpload en verwerkt."
       });
 
       // Reset form
@@ -157,7 +160,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       console.error('Upload error:', error);
       toast({
         title: "Fout",
-        description: "Er is een fout opgetreden bij het uploaden.",
+        description: error instanceof Error ? error.message : 'Er is een fout opgetreden bij het uploaden.',
         variant: "destructive"
       });
     } finally {
