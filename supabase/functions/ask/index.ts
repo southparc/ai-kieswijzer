@@ -14,11 +14,7 @@ const supabase = createClient(
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
-// Available parties - must match the 16 parties in the frontend
-const AVAILABLE_PARTIES = [
-  'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
-  'ChristenUnie','NSC','BBB','Volt','JA21','BVNL','SGP','DENK'
-];
+// 
 
 // Guess party from text/title/url when DB label is wrong
 function guessParty(text: string, fallback: string) {
@@ -38,6 +34,7 @@ function guessParty(text: string, fallback: string) {
     { re: /(^|[\s_-])bvnl([\s_-]|$)/i, name: 'BVNL' },
     { re: /(^|[\s_-])fvd([\s_-]|$)/i, name: 'FvD' },
     { re: /(^|[\s_-])sp([\s_-]|$)/i, name: 'SP' },
+    { re: /(vrij\s*verbond)|(^|[\s_-])vv([\s_-]|$)/i, name: 'Vrij Verbond' },
   ];
   for (const p of patterns) {
     if (p.re.test(t)) return p.name;
@@ -116,37 +113,10 @@ serve(async (req) => {
 
     console.log('Generated embedding');
 
-    // Check if the question is about a party not in our available list
-    const questionLower = question.toLowerCase();
-    const unavailablePartyMentioned = ['vrij verbond', '50plus', 'lijst', 'lokale partij'].some(party => 
-      questionLower.includes(party)
-    );
-
-    if (unavailablePartyMentioned) {
-      // Return early for unavailable parties
-      const unavailableResponse = `Deze vraag gaat over een partij die niet beschikbaar is in onze database. Ik kan alleen informatie geven over de volgende ${AVAILABLE_PARTIES.length} partijen die deelnemen aan de verkiezingen van 2025:
-
-${AVAILABLE_PARTIES.map(party => `• ${party}`).join('\n')}
-
-Stel je vraag opnieuw over een van deze partijen en ik geef je een uitgebreide analyse op basis van hun officiële verkiezingsprogramma's.`;
-
-      return new Response(
-        JSON.stringify({
-          answer: unavailableResponse,
-          sources: [],
-          query_id: queryData.id
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Only work with available parties from the database
+    // First, get all distinct parties from the database
     const { data: allParties, error: partiesError } = await supabase
       .from('documents')
       .select('party')
-      .in('party', AVAILABLE_PARTIES)
       .order('party');
 
     if (partiesError) {
@@ -154,8 +124,8 @@ Stel je vraag opnieuw over een van deze partijen en ik geef je een uitgebreide a
       throw partiesError;
     }
 
-    const availableParties = [...new Set(allParties?.map(p => p.party) || [])];
-    console.log('Available parties in database:', availableParties.join(', '));
+    const uniqueParties = [...new Set(allParties?.map(p => p.party) || [])];
+    console.log('All parties in database:', uniqueParties.join(', '));
 
     // Search for relevant chunks using the RAG function (fetch many more)
     const { data: ragResults, error: ragError } = await supabase
@@ -185,8 +155,8 @@ Stel je vraag opnieuw over een van deze partijen en ik geef je een uitgebreide a
       }
     });
 
-    // For any missing parties from available list, fetch their content directly
-    for (const party of availableParties) {
+    // For any missing parties, fetch their content directly
+    for (const party of uniqueParties) {
       const normalizedParty = guessParty(party, party);
       if (!partyContent.has(normalizedParty)) {
         // Get any content for this party
@@ -254,29 +224,17 @@ Stel je vraag opnieuw over een van deze partijen en ik geef je een uitgebreide a
         messages: [
           {
             role: 'system',
-            content: `Je bent een Nederlandse politieke adviseur die uitsluitend werkt met de officiële verkiezingsprogramma's van 2025. 
+            content: `Je bent een Nederlandse politieke adviseur die uitsluitend werkt met officiële verkiezingsprogramma's van 2025.
 
-**KRITIEKE REGEL: Gebruik ALLEEN informatie uit de gegeven context van de ${AVAILABLE_PARTIES.length} beschikbare partijen.**
-
-Beschikbare partijen: ${AVAILABLE_PARTIES.join(', ')}
+BELANGRIJK:
+- Gebruik ALLEEN informatie uit de gegeven context
+- Behandel uitsluitend partijen die in de context staan (${allPartyResults.length}): ${allPartyResults.map((r: any) => r.party_norm).join(', ')}
+- Nooit informatie verzinnen buiten de context
 
 Antwoordregels:
-- Gebruik UITSLUITEND informatie uit de gegeven context
-- Als een partij niet in de context staat, vermeld je deze NIET
-- Geef per aanwezige partij een uitgebreide paragraaf met:
-  * Specifieke beleidsvoorstellen uit hun programma
-  * Concrete doelstellingen en cijfers waar mogelijk
-  * Onderliggende motivatie
-- **Gebruik deze structuur**: ## Partijnaam, gevolgd door een uitgebreide paragraaf
-- Als er onvoldoende informatie is, zeg dan eerlijk dat er meer details nodig zijn
-- Blijf binnen de grenzen van de beschikbare programma-informatie
-- VERZIN GEEN informatie die niet in de context staat
-
-Voorbeeld structuur:
-## Partijnaam
-Volgens hun verkiezingsprogramma wil [partij] [specifiek voorstel uit context]. [Verdere details uit de context].
-
-WAARSCHUWING: Antwoord NOOIT over partijen die niet in de context staan!
+- Geef per aanwezige partij een uitgebreide paragraaf met specifieke voorstellen, doelen/cijfers en motivatie
+- Structuur: ## Partijnaam gevolgd door een paragraaf
+- Als informatie ontbreekt voor een partij, sla die partij over en vermeld dat er geen context beschikbaar was
 
 Context van officiële verkiezingsprogramma's 2025:
 ${context}`
