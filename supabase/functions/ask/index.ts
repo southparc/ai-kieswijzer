@@ -114,9 +114,10 @@ serve(async (req) => {
     console.log('Generated embedding');
 
     // First, get all distinct parties from the database
-    const { data: allParties, error: partiesError } = await supabase
+    // First, get all parties from the database and build a normalized mapping
+    const { data: allDocs, error: partiesError } = await supabase
       .from('documents')
-      .select('party')
+      .select('party, title, url')
       .order('party');
 
     if (partiesError) {
@@ -124,8 +125,16 @@ serve(async (req) => {
       throw partiesError;
     }
 
-    const uniqueParties = [...new Set(allParties?.map(p => p.party) || [])];
-    console.log('All parties in database:', uniqueParties.join(', '));
+    // Map normalizedParty -> set of original party labels present in DB
+    const normToOriginal = new Map<string, Set<string>>();
+    (allDocs || []).forEach((d: any) => {
+      const norm = guessParty(`${d.party} ${d.title} ${d.url}`, d.party);
+      if (!normToOriginal.has(norm)) normToOriginal.set(norm, new Set<string>());
+      normToOriginal.get(norm)!.add(d.party);
+    });
+
+    const uniquePartiesNorm = Array.from(normToOriginal.keys());
+    console.log('Parties (normalized):', uniquePartiesNorm.join(', '));
 
     // Search for relevant chunks using the RAG function (fetch many more)
     const { data: ragResults, error: ragError } = await supabase
@@ -155,12 +164,13 @@ serve(async (req) => {
       }
     });
 
-    // For any missing parties, fetch their content directly
-    for (const party of uniqueParties) {
-      const normalizedParty = guessParty(party, party);
+    // For any missing parties, fetch their content directly (query using original labels for each normalized name)
+    for (const normalizedParty of uniquePartiesNorm) {
       if (!partyContent.has(normalizedParty)) {
-        // Get any content for this party
-        const { data: partyChunks } = await supabase
+        const originals = Array.from(normToOriginal.get(normalizedParty) || []);
+        if (originals.length === 0) continue;
+
+        const { data: partyChunks, error: partyChunksError } = await supabase
           .from('chunks')
           .select(`
             content,
@@ -171,22 +181,25 @@ serve(async (req) => {
               url
             )
           `)
-          .eq('documents.party', party)
+          .in('documents.party', originals)
           .limit(1);
+
+        if (partyChunksError) {
+          console.log('Error fetching fallback chunk for', normalizedParty, partyChunksError);
+        }
 
         if (partyChunks && partyChunks.length > 0) {
           const chunk = partyChunks[0];
           partyContent.set(normalizedParty, {
             content: chunk.content,
             page: chunk.page,
-            party: party,
+            party: chunk.documents.party,
             party_norm: normalizedParty,
             title: chunk.documents.title,
             url: chunk.documents.url
           });
         } else {
-          // Don't create fallback content - only use real program data
-          console.log(`No content found for party: ${normalizedParty}`);
+          console.log(`No content found for party (normalized): ${normalizedParty} | originals tried: ${originals.join(', ')}`);
         }
       }
     }
