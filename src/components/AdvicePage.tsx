@@ -69,8 +69,8 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-background">
+      <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" onClick={onBack} className="gap-2">

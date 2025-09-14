@@ -97,8 +97,8 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
   const sortedResults = [...results].sort((a, b) => b.percentage - a.percentage);
 
   return (
-    <div className="min-h-screen bg-gradient-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-background">
+      <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6">

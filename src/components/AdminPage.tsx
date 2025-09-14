@@ -324,7 +324,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
+      <div className="bg-gradient-background flex items-center justify-center" style={{ minHeight: '80vh', padding: '0 8vw' }}>
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Laden...</span>
@@ -336,8 +336,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Show login form if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
-        <div className="w-full max-w-md p-6">
+      <div className="bg-gradient-background flex items-center justify-center" style={{ minHeight: '80vh', padding: '0 8vw' }}>
+        <div className="w-full max-w-md">
           <Card className="p-6">
             <div className="flex items-center gap-4 mb-6">
               <Button variant="ghost" onClick={onBack} className="gap-2">
@@ -392,8 +392,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Show access denied if not in allowed emails
   if (!ALLOWED_EMAILS.includes(user.email!)) {
     return (
-      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
-        <div className="w-full max-w-md p-6">
+      <div className="bg-gradient-background flex items-center justify-center" style={{ minHeight: '80vh', padding: '0 8vw' }}>
+        <div className="w-full max-w-md">
           <Card className="p-6 text-center">
             <div className="flex items-center gap-4 mb-6">
               <Button variant="ghost" onClick={onBack} className="gap-2">
@@ -420,8 +420,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-background">
+      <div className="max-w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
