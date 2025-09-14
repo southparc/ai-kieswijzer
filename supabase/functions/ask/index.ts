@@ -133,8 +133,54 @@ serve(async (req) => {
       normToOriginal.get(norm)!.add(d.party);
     });
 
-    const uniquePartiesNorm = Array.from(normToOriginal.keys());
+    let uniquePartiesNorm = Array.from(normToOriginal.keys());
     console.log('Parties (normalized):', uniquePartiesNorm.join(', '));
+
+    // If user asks about Vrij Verbond but it's missing, try ingesting from storage on the fly
+    const wantsVV = /vrij\s*verbond|(^|\W)vv(\W|$)/i.test(question || '');
+    if (wantsVV && !normToOriginal.has('Vrij Verbond')) {
+      console.log('Vrij Verbond requested but not in documents. Attempting targeted ingest from storage...');
+      const BUCKET = 'programs';
+      const names: string[] = [];
+      try {
+        let page = 0; const limit = 100;
+        while (true) {
+          const { data, error } = await supabase.storage.from(BUCKET).list('', { limit, offset: page * limit });
+          if (error) { console.log('Storage list error', error); break; }
+          if (!data || data.length === 0) break;
+          names.push(...data.map(o => o.name));
+          if (data.length < limit) break; page++;
+        }
+        const candidate = names.find(n => /(vrij[\s_-]*verbond)|(^|[\s_-])vv([\s_-]|$)/i.test(n));
+        if (candidate) {
+          console.log('Found Vrij Verbond file in storage:', candidate, '— invoking ingest_from_storage');
+          const { data: ingestResp, error: ingestErr } = await supabase.functions.invoke('ingest_from_storage', {
+            body: { files: [candidate], reingest: false, defaultYear: 2025 }
+          });
+          if (ingestErr) { console.log('Ingest invoke error', ingestErr); }
+          else { console.log('Ingest response:', ingestResp); }
+
+          // Refresh documents and mapping
+          const { data: allDocs2 } = await supabase
+            .from('documents')
+            .select('party, title, url')
+            .order('party');
+
+          normToOriginal.clear();
+          (allDocs2 || []).forEach((d: any) => {
+            const norm = guessParty(`${d.party} ${d.title} ${d.url}`, d.party);
+            if (!normToOriginal.has(norm)) normToOriginal.set(norm, new Set<string>());
+            normToOriginal.get(norm)!.add(d.party);
+          });
+          uniquePartiesNorm = Array.from(normToOriginal.keys());
+          console.log('Parties after ingest (normalized):', uniquePartiesNorm.join(', '));
+        } else {
+          console.log('No Vrij Verbond file found in storage bucket');
+        }
+      } catch (e) {
+        console.log('Error during on-the-fly ingest attempt:', e);
+      }
+    }
 
     // Search for relevant chunks using the RAG function (fetch many more)
     const { data: ragResults, error: ragError } = await supabase

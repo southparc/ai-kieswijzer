@@ -43,6 +43,7 @@ function parsePartyAndTitle(filename: string) {
     { regex: /(^|[\s_-])ja21([\s_-]|$)/i, party: "JA21" },
     { regex: /(^|[\s_-])bvnl([\s_-]|$)/i, party: "BVNL" },
     { regex: /(^|[\s_-])fvd([\s_-]|$)/i, party: "FvD" },
+    { regex: /(vrij\s*verbond)|(^|[\s_-])vv([\s_-]|$)/i, party: "Vrij Verbond" },
     // Place SP last so 'verkiezingsprogramma' doesn't trigger it
     { regex: /(^|[\s_-])sp([\s_-]|$)/i, party: "SP" },
   ];
