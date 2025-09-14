@@ -186,6 +186,7 @@ serve(async (req) => {
         const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(name);
         const publicUrl = pub.publicUrl;
         const { party, title } = parsePartyAndTitle(name);
+        const logBase = { path: name, party, title } as any;
 
         // Skip if exists unless reingest
         const { data: existing, error: existErr } = await supabase
@@ -220,6 +221,7 @@ serve(async (req) => {
           if (delErr) throw delErr;
         } else if (existing && !reingest) {
           results.push({ file: name, status: "skipped", message: "already ingested", document_id: documentId });
+          await supabase.from("ingest_log").insert({ ...logBase, status: "skipped", message: "already ingested", doc_id: documentId });
           continue;
         }
 
@@ -270,9 +272,11 @@ serve(async (req) => {
         }
 
         results.push({ file: name, status: "processed", document_id: documentId, chunks: rows.length });
+        await supabase.from("ingest_log").insert({ ...logBase, status: "processed", doc_id: documentId, message: `chunks:${rows.length}` });
       } catch (e) {
         console.error("Error processing file", name, e);
         results.push({ file: name, status: "error", message: (e as Error).message });
+        await supabase.from("ingest_log").insert({ path: name, status: "error", message: (e as Error).message });
       }
     }
 
