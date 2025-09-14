@@ -291,6 +291,133 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       description: "Uitgelogd"
     });
   };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginData.email || !loginData.password) return;
+    
+    setLoginLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Succes",
+        description: "Ingelogd"
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Fout",
+        description: "Inloggen mislukt. Controleer je gegevens.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Laden...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login form if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
+        <div className="w-full max-w-md p-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <Button variant="ghost" onClick={onBack} className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Terug
+              </Button>
+              <h1 className="text-2xl font-bold">Admin Login</h1>
+            </div>
+            
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="admin@example.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Wachtwoord</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={loginData.password}
+                  onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="••••••••"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loginLoading || !loginData.email || !loginData.password}
+              >
+                {loginLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Inloggen...
+                  </>
+                ) : (
+                  'Inloggen'
+                )}
+              </Button>
+            </form>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if not in allowed emails
+  if (!ALLOWED_EMAILS.includes(user.email!)) {
+    return (
+      <div className="min-h-screen bg-gradient-background flex items-center justify-center">
+        <div className="w-full max-w-md p-6">
+          <Card className="p-6 text-center">
+            <div className="flex items-center gap-4 mb-6">
+              <Button variant="ghost" onClick={onBack} className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Terug
+              </Button>
+              <h1 className="text-2xl font-bold">Toegang Geweigerd</h1>
+            </div>
+            
+            <p className="text-muted-foreground mb-4">
+              Je hebt geen toegang tot het admin panel.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Ingelogd als: {user.email}
+            </p>
+            <Button onClick={handleLogout} variant="outline" className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Uitloggen
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gradient-background">
