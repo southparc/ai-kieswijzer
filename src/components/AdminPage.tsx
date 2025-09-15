@@ -205,26 +205,37 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     try {
       // Accept both a direct storage path (filename) or a public URL
       let name = singlePath.trim();
+      console.log('[Admin] Original input:', name);
+      
       try {
         const url = new URL(name);
+        console.log('[Admin] Parsed as URL, pathname:', url.pathname);
         const marker = '/object/public/programs/';
         const idx = url.pathname.indexOf(marker);
         if (idx !== -1) {
           name = decodeURIComponent(url.pathname.slice(idx + marker.length));
+          console.log('[Admin] Extracted filename from URL:', name);
         } else {
           // If it's a full URL but without the expected path, use the last segment
           const parts = url.pathname.split('/');
           name = decodeURIComponent(parts[parts.length - 1]);
+          console.log('[Admin] Using last path segment:', name);
         }
       } catch {
         // Not a URL, assume it's a direct filename in the bucket
         name = decodeURIComponent(name);
+        console.log('[Admin] Treating as direct filename:', name);
       }
 
-      console.log('[Admin] Ingest single file:', name);
+      console.log('[Admin] Final filename to process:', name);
+      console.log('[Admin] Calling ingest_from_storage with:', { files: [name], reingest: true, defaultYear: new Date().getFullYear(), maxFiles: 1 });
+      
       const { data, error } = await supabase.functions.invoke('ingest_from_storage', {
         body: { files: [name], reingest: true, defaultYear: new Date().getFullYear(), maxFiles: 1 }
       });
+      
+      console.log('[Admin] Function response - data:', data, 'error:', error);
+      
       if (error) throw error;
       toast({
         title: 'Indexeren voltooid',
@@ -232,7 +243,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       });
       setSinglePath('');
     } catch (e) {
-      console.error('Ingest single file error:', e);
+      console.error('[Admin] Ingest single file error:', e);
       toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Indexeren van dit bestand mislukt.', variant: 'destructive' });
     } finally {
       setSingleIngestLoading(false);
