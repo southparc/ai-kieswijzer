@@ -1,23 +1,24 @@
 import { Party, PartyResult } from "@/types/party";
 
-// Current polling data approximation (based on January 2025 polls)
+// Current polling data based on Peilingwijzer (September 2025)
+// Source: https://peilingwijzer.tomlouwerse.nl/ - Updated: 03-09-2025
 const CURRENT_POLLING_SEATS: Record<string, number> = {
-  'PVV': 30,           // ~20% of 150 seats
-  'GroenLinks-PvdA': 26, // ~17% of 150 seats  
-  'VVD': 21,           // ~14% of 150 seats
-  'CDA': 18,           // ~12% of 150 seats
-  'D66': 12,           // ~8% of 150 seats
-  'NSC': 8,            // ~5% of 150 seats
-  'SP': 7,             // ~4.5% of 150 seats
-  'Partij voor de Dieren': 7, // ~4.5% of 150 seats
-  'BBB': 6,            // ~4% of 150 seats
-  'ChristenUnie': 4,   // ~2.5% of 150 seats
-  'SGP': 4,            // ~2.5% of 150 seats
-  'Volt': 4,           // ~2.5% of 150 seats
-  'DENK': 4,           // ~2.5% of 150 seats
-  'JA21': 3,           // ~2% of 150 seats
-  'FvD': 3,            // ~2% of 150 seats
-  'BVNL': 3            // ~2% of 150 seats
+  'PVV': 32,           // 29-35 seats range
+  'GroenLinks-PvdA': 25, // 23-27 seats range  
+  'VVD': 16,           // 14-18 seats range - significant decline
+  'CDA': 24,           // 22-26 seats range - major comeback!
+  'D66': 11,           // 10-12 seats range
+  'NSC': 1,            // 0-1 seats range - dramatic collapse!
+  'SP': 6,             // 5-7 seats range
+  'Partij voor de Dieren': 5, // 4-6 seats range
+  'BBB': 5,            // 4-6 seats range
+  'ChristenUnie': 4,   // 3-5 seats range
+  'SGP': 3,            // 2-4 seats range
+  'Volt': 3,           // 2-4 seats range
+  'DENK': 4,           // 3-5 seats range
+  'JA21': 9,           // 7-11 seats range - significant gain!
+  'FvD': 3,            // 2-4 seats range
+  'BVNL': 2            // Estimated based on similar parties
 };
 
 // Coalition compatibility matrix - defines which parties won't work together
