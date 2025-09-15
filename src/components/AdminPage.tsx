@@ -167,6 +167,40 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       setLoading(false);
     }
   };
+  
+  const handleIngestFromUrl = async () => {
+    if (!formData.url || !formData.party || !formData.title) {
+      toast({
+        title: 'Fout',
+        description: 'Vul Partij, Titel en de Publieke URL in.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      console.log('[Admin] Ingest via URL:', formData.url);
+      const { data, error } = await supabase.functions.invoke('ingest', {
+        body: {
+          party: formData.party,
+          title: formData.title,
+          url: formData.url,
+          year: formData.year ? parseInt(formData.year) : null,
+          version: formData.version || null,
+        },
+      });
+      console.log('[Admin] ingest (via URL) result:', { data, error });
+      if (error) throw error;
+      toast({ title: 'Succes', description: (data as any)?.message || 'Document succesvol verwerkt via URL.' });
+      setFormData({ party: '', title: '', url: '', year: '', version: '' });
+      setFile(null);
+    } catch (e) {
+      console.error('[Admin] Ingest via URL error:', e);
+      toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Verwerken via URL mislukt.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [ingestLoading, setIngestLoading] = useState(false);
   const [singlePath, setSinglePath] = useState("");
@@ -645,6 +679,16 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </div>
 
                 <div>
+                  <Label htmlFor="url">Publieke URL (optioneel — direct indexeren zonder upload)</Label>
+                  <Input
+                    id="url"
+                    value={formData.url}
+                    onChange={(e) => handleInputChange('url', e.target.value)}
+                    placeholder="https://.../storage/v1/object/public/programs/bestand.pdf"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="year">Jaar</Label>
                   <Input
                     id="year"
@@ -696,6 +740,22 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         <Upload className="h-4 w-4" />
                         Inladen (nieuw bestand)
                       </>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={handleIngestFromUrl}
+                    variant="outline"
+                    disabled={loading || !formData.url.trim()}
+                    className="w-full gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Verwerken...
+                      </>
+                    ) : (
+                      <>Inladen via URL (geen upload)</>
                     )}
                   </Button>
 
