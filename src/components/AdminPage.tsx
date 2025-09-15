@@ -169,6 +169,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   };
 
   const [ingestLoading, setIngestLoading] = useState(false);
+  const [singlePath, setSinglePath] = useState("");
+  const [singleIngestLoading, setSingleIngestLoading] = useState(false);
   
   const [healthLoading, setHealthLoading] = useState(false);
   const [health, setHealth] = useState<any | null>(null);
@@ -191,6 +193,49 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Indexeren vanuit Storage mislukt.', variant: 'destructive' });
     } finally {
       setIngestLoading(false);
+    }
+  };
+
+  const handleIngestSingleFile = async () => {
+    if (!singlePath.trim()) {
+      toast({ title: 'Fout', description: 'Voer een storage pad of publieke URL in.', variant: 'destructive' });
+      return;
+    }
+    setSingleIngestLoading(true);
+    try {
+      // Accept both a direct storage path (filename) or a public URL
+      let name = singlePath.trim();
+      try {
+        const url = new URL(name);
+        const marker = '/object/public/programs/';
+        const idx = url.pathname.indexOf(marker);
+        if (idx !== -1) {
+          name = decodeURIComponent(url.pathname.slice(idx + marker.length));
+        } else {
+          // If it's a full URL but without the expected path, use the last segment
+          const parts = url.pathname.split('/');
+          name = decodeURIComponent(parts[parts.length - 1]);
+        }
+      } catch {
+        // Not a URL, assume it's a direct filename in the bucket
+        name = decodeURIComponent(name);
+      }
+
+      console.log('[Admin] Ingest single file:', name);
+      const { data, error } = await supabase.functions.invoke('ingest_from_storage', {
+        body: { files: [name], reingest: true, defaultYear: new Date().getFullYear(), maxFiles: 1 }
+      });
+      if (error) throw error;
+      toast({
+        title: 'Indexeren voltooid',
+        description: `Bestand verwerkt: ${data?.processed ?? 0}, overgeslagen: ${data?.skipped ?? 0}, fouten: ${data?.errors ?? 0}`,
+      });
+      setSinglePath('');
+    } catch (e) {
+      console.error('Ingest single file error:', e);
+      toast({ title: 'Fout', description: e instanceof Error ? e.message : 'Indexeren van dit bestand mislukt.', variant: 'destructive' });
+    } finally {
+      setSingleIngestLoading(false);
     }
   };
 
@@ -658,6 +703,32 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       <>Indexeer bestaande bestanden</>
                     )}
                   </Button>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="single-path">Indexeer specifiek bestand (Storage pad of publieke URL)</Label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      id="single-path"
+                      placeholder="bijv. Vrij Verbond - Verkiezingsprogramma-01092025.pdf of volledige URL"
+                      value={singlePath}
+                      onChange={(e) => setSinglePath(e.target.value)}
+                    />
+                    <Button
+                      onClick={handleIngestSingleFile}
+                      disabled={singleIngestLoading || !singlePath.trim()}
+                      className="w-full sm:w-auto gap-2"
+                    >
+                      {singleIngestLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Indexeren...
+                        </>
+                      ) : (
+                        <>Indexeer dit bestand</>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
