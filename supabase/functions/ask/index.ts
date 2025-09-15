@@ -184,9 +184,11 @@ serve(async (req) => {
     }
 
     // Search for relevant chunks using the RAG function (fetch many more)
+    // Ensure correct type for vector param (PostgREST expects text for "vector")
+    const qVec = JSON.stringify(questionEmbedding);
     const { data: ragResults, error: ragError } = await supabase
       .rpc('rag_topk', {
-        q_embedding: questionEmbedding,
+        q_embedding: qVec,
         k: 128 // Fetch even more to ensure we get content for all parties
       });
 
