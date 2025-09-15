@@ -24,7 +24,7 @@ export const LandingPage = ({
                   AI Kieswijzer
                 </span>
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer die midden september volledig en up-to-data zal zijn.
+               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer die eind september volledig en up-to-data zal zijn.
 Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijprogramma's. Stel vragen over zorg, wonen, klimaat en meer.</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" variant="dutch-red" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
@@ -43,10 +43,10 @@ Krijg gepersonaliseerd politiek advies op basis van AI-analyse van alle partijpr
                 </span>
               </div>
               
-              {/* Version */}
-              <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                <span>v 0.32</span>
-              </div>
+               {/* Version */}
+               <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
+                 <span>v0.4</span>
+               </div>
             </div>
             <div className="relative">
               <img src={heroImage} alt="Nederlandse democratie - stemmen en verkiezingen" className="w-full h-auto rounded-2xl shadow-elegant" />
