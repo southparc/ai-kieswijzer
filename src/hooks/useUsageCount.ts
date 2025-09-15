@@ -10,16 +10,16 @@ export const useUsageCount = () => {
 
     const fetchUsageCount = async () => {
       try {
-        const { count: queryCount, error } = await supabase
-          .from('queries')
-          .select('*', { count: 'exact', head: true });
+        // Use the security definer function for public counting
+        const { data, error } = await supabase
+          .rpc('get_query_count');
 
         if (error) {
           console.error('Error fetching usage count:', error);
           return;
         }
         if (!isMounted) return;
-        setCount(queryCount || 0);
+        setCount(data || 0);
       } catch (error) {
         console.error('Error:', error);
       } finally {
