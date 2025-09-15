@@ -3,6 +3,7 @@ import { LandingPage } from "@/components/LandingPage";
 import { AdvicePage } from "@/components/AdvicePage";
 import { QuizInterface, Answer } from "@/components/QuizInterface";
 import { ResultsPage } from "@/components/ResultsPage";
+import { CoalitionPage } from "@/components/CoalitionPage";
 import { useQuestions } from "@/hooks/useQuestions";
 import { calculateResults } from "@/utils/calculateResults";
 import { PartyResult } from "@/types/party";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeWeights } from "@/components/ThemeWeightSetup";
 
 // App state
-type AppState = "landing" | "advice" | "quiz" | "results";
+type AppState = "landing" | "advice" | "quiz" | "results" | "coalition";
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>("landing");
@@ -31,6 +32,7 @@ const Index = () => {
   };
 
   const handleRestartQuiz = () => setAppState("landing");
+  const handleViewCoalition = () => setAppState("coalition");
 
   // Loading state while fetching parties or questions
   if (partiesLoading || questionsLoading) {
@@ -77,7 +79,10 @@ const Index = () => {
       );
 
     case "results":
-      return <ResultsPage results={quizResults} onRestart={handleRestartQuiz} />;
+      return <ResultsPage results={quizResults} onRestart={handleRestartQuiz} onViewCoalition={handleViewCoalition} />;
+
+    case "coalition":
+      return <CoalitionPage results={quizResults} onRestart={handleRestartQuiz} />;
 
     default:
       return <LandingPage onStart={handleStart} onStartQuiz={handleStartQuiz} />;

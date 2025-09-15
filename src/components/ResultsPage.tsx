@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RotateCcw, Share2, Download, Trophy, Info } from "lucide-react";
+import { RotateCcw, Share2, Download, Trophy, Info, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Answer } from "./QuizInterface";
 import { PartyResult, QuestionBreakdown } from "@/types/party";
@@ -11,6 +11,7 @@ import { questions } from "@/data/questions";
 interface ResultsPageProps {
   results: PartyResult[];
   onRestart: () => void;
+  onViewCoalition: () => void;
 }
 
 const BreakdownDialog = ({ 
@@ -92,7 +93,7 @@ const BreakdownDialog = ({
   );
 };
 
-export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
+export const ResultsPage = ({ results, onRestart, onViewCoalition }: ResultsPageProps) => {
   const topMatch = results[0];
   const sortedResults = [...results].sort((a, b) => b.percentage - a.percentage);
 
@@ -237,12 +238,13 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
           </Button>
           
           <Button
-            variant="outline"
+            onClick={onViewCoalition}
+            variant="default"
             size="lg"
             className="gap-2 flex-1"
           >
-            <Share2 className="h-4 w-4" />
-            Deel resultaat
+            <Users className="h-4 w-4" />
+            Coalitiekansen
           </Button>
           
           <Button
@@ -250,8 +252,8 @@ export const ResultsPage = ({ results, onRestart }: ResultsPageProps) => {
             size="lg"
             className="gap-2 flex-1"
           >
-            <Download className="h-4 w-4" />
-            Download PDF
+            <Share2 className="h-4 w-4" />
+            Deel resultaat
           </Button>
         </div>
       </div>

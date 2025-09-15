@@ -1,6 +1,7 @@
 import { Party, PartyResult, QuestionBreakdown } from "@/types/party";
 import { Answer, Question } from "@/components/QuizInterface";
 import { ThemeWeights } from "@/components/ThemeWeightSetup";
+import { calculateCoalitionChances } from "./calculateCoalitionChances";
 
 export const calculateResults = (
   answers: Record<number, Answer>, 
@@ -18,7 +19,7 @@ export const calculateResults = (
     return acc;
   }, {} as Record<number, keyof ThemeWeights>);
 
-  return parties.map(party => {
+  const results = parties.map(party => {
     let weightedMatches = 0;
     let totalPossibleWeight = 0;
     let agreements = 0;
@@ -104,4 +105,16 @@ export const calculateResults = (
       breakdown
     };
   }).sort((a, b) => b.percentage - a.percentage);
+
+  // Calculate coalition chances for all parties
+  const coalitionChances = calculateCoalitionChances(results);
+  
+  // Add coalition chances to results
+  return results.map(result => {
+    const coalitionData = coalitionChances.find(c => c.partyName === result.party.name);
+    return {
+      ...result,
+      coalitionChance: coalitionData?.chancePercentage || 0
+    };
+  });
 };

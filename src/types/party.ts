@@ -30,4 +30,16 @@ export interface PartyResult {
   agreements: number;
   disagreements: number;
   breakdown: QuestionBreakdown[];
+  coalitionChance?: number;
+}
+
+export interface CoalitionResult {
+  partyName: string;
+  chancePercentage: number;
+  mostLikelyCoalitions: Array<{
+    partners: string[];
+    seats: number;
+    probability: number;
+  }>;
+  explanation: string;
 }
