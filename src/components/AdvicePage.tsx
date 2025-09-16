@@ -40,7 +40,6 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
   const [stats, setStats] = useState<DocumentStats>({ docCount: 0, lastUpdate: "" });
   
   // Chat state
-  const [chatMode, setChatMode] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
@@ -94,9 +93,6 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
     }
   };
 
-  const startChat = () => {
-    setChatMode(true);
-  };
 
   const sendChatMessage = async () => {
     if (!chatMessage.trim() || chatLoading) return;
@@ -246,88 +242,69 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
             )}
 
             {/* Chat Interface */}
-            {!chatMode ? (
-              <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                      Wil je verder praten over Nederlandse politiek?
-                    </h3>
-                    <p className="text-blue-700 text-sm">
-                      Start een gesprek om dieper in te gaan op de antwoorden en stel vervolgvragen.
-                    </p>
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Gesprek over Nederlandse Politiek
+              </h3>
+              
+              {/* Chat History */}
+              <div className="mb-4 max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-4 space-y-4">
+                {conversationHistory.map((msg, index) => (
+                  <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-lg ${
+                      msg.role === 'user' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white border shadow-sm'
+                    }`}>
+                      <div className="prose prose-sm max-w-none">
+                        {msg.role === 'assistant' ? (
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        ) : (
+                          <p className="m-0">{msg.content}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <Button onClick={startChat} className="bg-blue-600 hover:bg-blue-700 gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Start Chat
-                  </Button>
-                </div>
-              </Card>
-            ) : (
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Gesprek over Nederlandse Politiek
-                </h3>
-                
-                {/* Chat History */}
-                <div className="mb-4 max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-4 space-y-4">
-                  {conversationHistory.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] p-3 rounded-lg ${
-                        msg.role === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-white border shadow-sm'
-                      }`}>
-                        <div className="prose prose-sm max-w-none">
-                          {msg.role === 'assistant' ? (
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                          ) : (
-                            <p className="m-0">{msg.content}</p>
-                          )}
-                        </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-white border shadow-sm p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-gray-600">Aan het typen...</span>
                       </div>
                     </div>
-                  ))}
-                  {chatLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-white border shadow-sm p-3 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-sm text-gray-600">Aan het typen...</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
 
-                {/* Chat Input */}
-                <div className="flex gap-2">
-                  <Input
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Stel een vervolgvraag over Nederlandse politiek..."
-                    disabled={chatLoading}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={sendChatMessage}
-                    disabled={!chatMessage.trim() || chatLoading}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Send className="h-4 w-4" />
-                    Verstuur
-                  </Button>
-                </div>
-                
-                <p className="text-xs text-gray-500 mt-2">
-                  💡 Tip: Druk op Enter om je bericht te versturen. Deze chat focust alleen op Nederlandse politiek.
-                </p>
-              </Card>
-            )}
+              {/* Chat Input */}
+              <div className="flex gap-2">
+                <Input
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Stel een vervolgvraag over Nederlandse politiek..."
+                  disabled={chatLoading}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={sendChatMessage}
+                  disabled={!chatMessage.trim() || chatLoading}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  Verstuur
+                </Button>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-2">
+                💡 Tip: Druk op Enter om je bericht te versturen. Deze chat focust alleen op Nederlandse politiek.
+              </p>
+            </Card>
           </div>
         )}
 
