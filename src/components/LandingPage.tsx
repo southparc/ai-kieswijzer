@@ -15,7 +15,7 @@ export const LandingPage = ({
   return <div className="bg-gradient-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
+        <div className="max-w-full px-[5%] py-4 md:py-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="space-y-6 sm:space-y-8">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
@@ -56,7 +56,7 @@ Krijg gepersonaliseerd stemadvies op basis van AI-analyse van alle partijprogram
       </div>
 
       {/* Info Section */}
-      <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
+      <div className="max-w-full px-[5%] py-4 md:py-8">
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           <Card className="p-6 text-center">
             <Info className="h-12 w-12 text-primary mx-auto mb-4" />

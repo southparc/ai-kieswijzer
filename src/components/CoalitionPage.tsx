@@ -82,7 +82,7 @@ export const CoalitionPage = ({ results, onRestart }: CoalitionPageProps) => {
 
   return (
     <div className="bg-gradient-background">
-      <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
+      <div className="max-w-full px-[5%] py-4 md:py-8">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6">

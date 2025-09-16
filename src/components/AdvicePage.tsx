@@ -149,14 +149,14 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
 
   return (
     <div className="bg-gradient-background">
-      <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
+      <div className="max-w-full px-[5%] py-4 md:py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" onClick={onBack} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Terug
           </Button>
-          <h1 className="text-3xl font-bold">Politiek Advies</h1>
+          <h1 className="text-xl md:text-3xl font-bold">Politiek Advies</h1>
         </div>
 
         {/* Input Section */}
@@ -164,7 +164,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
           <div className="space-y-6">
             {/* Question Input */}
             <div>
-              <h3 className="text-lg font-semibold mb-2">Jouw vraag</h3>
+              <h3 className="text-base md:text-lg font-semibold mb-2">Jouw vraag</h3>
               <Textarea
                 placeholder="Stel een vraag over politieke standpunten, bijvoorbeeld: 'Wat vinden de partijen over sociale huurwoningen?' of 'Hoe staan partijen tegenover het klimaatbeleid?'"
                 value={question}
@@ -196,8 +196,8 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
           <div className="space-y-6">
             {/* Original Answer */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Resultaat</h2>
-              <div className="prose prose-slate max-w-none compact-bullets">
+              <h2 className="text-lg md:text-xl font-semibold mb-4">Resultaat</h2>
+              <div className="prose prose-sm md:prose prose-slate max-w-none compact-bullets">
                 <ReactMarkdown>{result.answer}</ReactMarkdown>
               </div>
             </Card>
@@ -205,7 +205,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
             {/* Sources */}
             {result.sources && result.sources.length > 0 && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">
+                <h3 className="text-base md:text-lg font-semibold mb-4">
                   Bronnen ({result.sources.length})
                 </h3>
                 <div className="overflow-x-auto">
@@ -243,21 +243,21 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
 
             {/* Chat Interface */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" />
                 Gesprek over Nederlandse Politiek
               </h3>
               
               {/* Chat History */}
-              <div className="mb-4 max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-4 space-y-4">
+              <div className="mb-4 max-h-64 md:max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-2 md:p-4 space-y-2 md:space-y-4">
                 {conversationHistory.map((msg, index) => (
                   <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 rounded-lg ${
+                    <div className={`max-w-[85%] md:max-w-[80%] p-2 md:p-3 rounded-lg ${
                       msg.role === 'user' 
                         ? 'bg-blue-600 text-white' 
                         : 'bg-white border shadow-sm'
                     }`}>
-                      <div className="prose prose-sm max-w-none">
+                      <div className="prose prose-xs md:prose-sm max-w-none">
                         {msg.role === 'assistant' ? (
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         ) : (
@@ -309,7 +309,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
         )}
 
         {/* Footer */}
-        <div className="mt-12 text-center text-sm text-muted-foreground border-t pt-6">
+        <div className="mt-8 md:mt-12 text-center text-xs md:text-sm text-muted-foreground border-t pt-4 md:pt-6">
           Laatste update: {stats.lastUpdate} · Documenten: {stats.docCount} · 
           Geen stemadvies; alleen bronvergelijking
         </div>

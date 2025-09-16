@@ -101,7 +101,7 @@ export const QuizInterface = ({ questions, onComplete, onBack }: QuizInterfacePr
 
   return (
     <div className="bg-gradient-background">
-      <div className="max-w-full" style={{ padding: '2vh 8vw' }}>
+      <div className="max-w-full px-[5%] py-4 md:py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">

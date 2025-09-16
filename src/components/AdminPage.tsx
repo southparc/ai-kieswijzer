@@ -435,7 +435,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="bg-gradient-background flex items-center justify-center" style={{ minHeight: '80vh', padding: '0 8vw' }}>
+      <div className="bg-gradient-background flex items-center justify-center min-h-[80vh] px-[5%]">
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Laden...</span>
@@ -447,7 +447,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Show login form if not authenticated
   if (!user) {
     return (
-      <div className="bg-gradient-background flex items-center justify-center" style={{ minHeight: '80vh', padding: '0 8vw' }}>
+      <div className="bg-gradient-background flex items-center justify-center min-h-[80vh] px-[5%]">
         <div className="w-full max-w-md">
           <Card className="p-6">
             <div className="flex items-center gap-4 mb-6">
@@ -503,7 +503,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Show access denied if not in allowed emails
   if (!ALLOWED_EMAILS.includes(user.email!)) {
     return (
-      <div className="bg-gradient-background flex items-center justify-center" style={{ minHeight: '80vh', padding: '0 8vw' }}>
+      <div className="bg-gradient-background flex items-center justify-center min-h-[80vh] px-[5%]">
         <div className="w-full max-w-md">
           <Card className="p-6 text-center">
             <div className="flex items-center gap-4 mb-6">
@@ -532,7 +532,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   
   return (
     <div className="bg-gradient-background">
-      <div className="max-w-full">
+      <div className="max-w-full px-[5%] py-4 md:py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">

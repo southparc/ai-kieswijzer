@@ -16,7 +16,7 @@ const App = () => (
       <Sonner />
       <div className="min-h-screen flex flex-col">
         <BrowserRouter>
-          <header className="border-b border-border/20" style={{ padding: '2vh 8vw' }}>
+          <header className="border-b border-border/20 px-[5%] py-4 md:py-8">
             <div className="max-w-full">
               <a href="/" className="inline-block">
                 <img 
@@ -27,7 +27,7 @@ const App = () => (
               </a>
             </div>
           </header>
-          <main className="flex-1" style={{ padding: '3vh 8vw' }}>
+          <main className="flex-1 px-[5%] py-6 md:py-12">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<AdminPage onBack={() => window.location.href = '/'} />} />
@@ -35,7 +35,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
-          <footer className="border-t border-border/50 bg-muted/30" style={{ padding: '2vh 8vw' }}>
+          <footer className="border-t border-border/50 bg-muted/30 px-[5%] py-4 md:py-8">
             <div className="max-w-full">
               <p className="text-xs text-muted-foreground text-center leading-relaxed">
                 De AI-kieswijzer is een experiment van Southparc BV - de uitkomst is gebaseerd op de bekende verkiezingsprogramma's en OpenAI en niet gevalideerd.
