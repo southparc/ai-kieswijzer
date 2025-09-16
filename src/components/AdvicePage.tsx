@@ -194,53 +194,6 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
         {/* Results Section */}
         {result && (
           <div className="space-y-6">
-            {/* Original Answer */}
-            <Card className="p-6">
-              <h2 className="text-lg md:text-xl font-semibold mb-4">Resultaat</h2>
-              <div className="prose prose-sm md:prose prose-slate max-w-none compact-bullets">
-                <ReactMarkdown>{result.answer}</ReactMarkdown>
-              </div>
-            </Card>
-
-            {/* Sources */}
-            {result.sources && result.sources.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-base md:text-lg font-semibold mb-4">
-                  Bronnen ({result.sources.length})
-                </h3>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Partij</TableHead>
-                        <TableHead>Pagina</TableHead>
-                        <TableHead>Document</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {result.sources.map((source, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{source.party}</TableCell>
-                          <TableCell>{source.page}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(source.url, '_blank')}
-                              className="gap-2"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              Bekijk document
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
-            )}
-
             {/* Chat Interface */}
             <Card className="p-6">
               <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
@@ -305,6 +258,45 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
                 💡 Tip: Druk op Enter om je bericht te versturen. Deze chat focust alleen op Nederlandse politiek.
               </p>
             </Card>
+
+            {/* Sources - moved to bottom */}
+            {result.sources && result.sources.length > 0 && (
+              <Card className="p-6">
+                <h3 className="text-base md:text-lg font-semibold mb-4">
+                  Bronnen ({result.sources.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Partij</TableHead>
+                        <TableHead>Pagina</TableHead>
+                        <TableHead>Document</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {result.sources.map((source, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{source.party}</TableCell>
+                          <TableCell>{source.page}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(source.url, '_blank')}
+                              className="gap-2"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Bekijk document
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            )}
           </div>
         )}
 
