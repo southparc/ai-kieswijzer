@@ -1,7 +1,11 @@
+// deno-lint-ignore-file no-explicit-any
+// @ts-nocheck
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getDocument } from "https://esm.sh/pdfjs-serverless@1.0.1";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -17,20 +21,75 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const BUCKET = "programs";
 
 interface IngestRequest {
-  files?: string[]; // optional specific file names to process
-  reingest?: boolean; // if true, process even if document/url exists
+  files?: string[];           // specifieke bestandsnamen verwerken
+  reingest?: boolean;         // true = opnieuw verwerken ook als het al bestaat
   defaultYear?: number | null;
   defaultVersion?: string | null;
-  maxFiles?: number | null; // limit number of files per run to avoid timeouts
+  maxFiles?: number | null;   // limiet per run
+}
+
+/* ---------- helpers ---------- */
+
+type ObjItem = {
+  name: string;
+  id?: string | null;
+  updated_at?: string;
+  metadata?: { size?: number; mimetype?: string | null } | null;
+};
+
+/** lijst alle paden in bucket/prefix recursief op (met paginatie + mimetype fallback) */
+async function listAllObjects(bucket: string, prefix = ""): Promise<string[]> {
+  const pageSize = 100;
+  let offset = 0;
+  let files: string[] = [];
+
+  while (true) {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix, {
+      limit: pageSize,
+      offset,
+      sortBy: { column: "name", order: "asc" },
+    });
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    const batch = data as ObjItem[];
+
+    // submappen (items zonder metadata)
+    const folders = batch
+      .filter((i) => !i.metadata)
+      .map((f) => (prefix ? `${prefix}/${f.name}` : f.name));
+
+    // bestanden (items met metadata): accepteer mimetype=application/pdf of extensie .pdf
+    const theseFiles = batch
+      .filter(
+        (i) =>
+          i.metadata &&
+          (((i.metadata.mimetype ?? "").toLowerCase() === "application/pdf") ||
+            i.name.toLowerCase().endsWith(".pdf")),
+      )
+      .map((f) => (prefix ? `${prefix}/${f.name}` : f.name));
+
+    files.push(...theseFiles);
+
+    // recursie voor submappen
+    for (const folder of folders) {
+      const sub = await listAllObjects(bucket, folder);
+      files.push(...sub);
+    }
+
+    if (batch.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  // unieke paden
+  return Array.from(new Set(files));
 }
 
 function parsePartyAndTitle(filename: string) {
-  // remove extension
   const base = filename.replace(/\.[^/.]+$/, "");
   const humanTitle = base.replace(/[._-]+/g, " ").trim();
   const lower = humanTitle.toLowerCase();
 
-  // Robust regex-based matching with word boundaries; order matters (specific before generic)
   const patterns: Array<{ regex: RegExp; party: string }> = [
     { regex: /(groenlinks|pvdagl|gl[\s_-]?pvda|pvda[\s_-]?gl)/i, party: "GroenLinks-PvdA" },
     { regex: /(^|[\s_-])vvd([\s_-]|$)/i, party: "VVD" },
@@ -46,7 +105,6 @@ function parsePartyAndTitle(filename: string) {
     { regex: /(^|[\s_-])bvnl([\s_-]|$)/i, party: "BVNL" },
     { regex: /(^|[\s_-])fvd([\s_-]|$)/i, party: "FvD" },
     { regex: /(vrij\s*verbond)|(^|[\s_-])vv([\s_-]|$)/i, party: "Vrij Verbond" },
-    // Place SP last so 'verkiezingsprogramma' doesn't trigger it
     { regex: /(^|[\s_-])sp([\s_-]|$)/i, party: "SP" },
   ];
 
@@ -87,55 +145,39 @@ async function createEmbedding(input: string) {
   return embedding;
 }
 
-// Extract text from PDF using pdfjs-serverless for edge environments
+// pdf → tekst met pdfjs; bij lege output een duidelijke placeholder
 async function extractPdfText(publicUrl: string, filename: string): Promise<string> {
   try {
-    console.log(`Processing PDF: ${filename}`);
+    console.log(`processing pdf: ${filename}`);
 
-    // 1) Fetch the PDF bytes from public storage URL
     const res = await fetch(publicUrl);
-    if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`);
+    if (!res.ok) throw new Error(`failed to fetch pdf (${res.status})`);
     const buffer = await res.arrayBuffer();
     const data = new Uint8Array(buffer);
-    console.log(`Fetched PDF ${filename}: ${data.length} bytes`);
+    console.log(`fetched pdf ${filename}: ${data.length} bytes`);
 
-    // 2) Use preloaded pdfjs-serverless (imported at top-level)
-    const document = await getDocument({
-      data,
-      useSystemFonts: true,
-    }).promise;
-    console.log(`PDF loaded for ${filename}: ${document.numPages} pages`);
+    const document = await getDocument({ data, useSystemFonts: true }).promise;
+    console.log(`pdf loaded for ${filename}: ${document.numPages} pages`);
 
-    // 3) Extract plain text for each page and concatenate
     const pages: string[] = [];
     for (let pageNum = 1; pageNum <= document.numPages; pageNum++) {
-      console.log(`Processing page ${pageNum}/${document.numPages} of ${filename}`);
       const page = await document.getPage(pageNum);
       const textContent = await page.getTextContent();
       const pageText = textContent.items
-        .map((item: any) => (typeof item?.str === 'string' ? item.str : ''))
-        .join(' ')
-        .replace(/\s+/g, ' ')
+        .map((item: any) => (typeof item?.str === "string" ? item.str : ""))
+        .join(" ")
+        .replace(/\s+/g, " ")
         .trim();
-      if (pageText) {
-        pages.push(`[Pagina ${pageNum}]\n${pageText}`);
-        console.log(`Page ${pageNum} of ${filename}: ${pageText.length} chars`);
-      }
+      if (pageText) pages.push(`[Pagina ${pageNum}]\n${pageText}`);
+      console.log(`page ${pageNum}/${document.numPages} of ${filename}: ${pageText.length} chars`);
     }
 
     const full = pages.join("\n\n");
-    if (!full.trim()) throw new Error("Empty text after extraction");
-    console.log(`Extracted ~${full.length} characters from ${filename}`);
+    if (!full.trim()) throw new Error("empty text after extraction");
+    console.log(`extracted ~${full.length} characters from ${filename}`);
     return full;
   } catch (error) {
-    console.error(`PDF processing failed for ${filename}:`, error);
-    // Log the specific error details
-    console.error(`Error type: ${error.constructor.name}`);
-    console.error(`Error message: ${error.message}`);
-    console.error(`Error stack: ${error.stack}`);
-    
-    // Fallback: keep a minimal placeholder so ingestion continues,
-    // but clearly mark that the source had no extractable text
+    console.error(`pdf processing failed for ${filename}:`, error);
     const { party, title } = parsePartyAndTitle(filename);
     return `Geen tekst geëxtraheerd uit ${title} (${party}). Error: ${error.message}`;
   }
@@ -153,8 +195,9 @@ function chunkText(text: string, chunkSize = 1200, overlap = 100): string[] {
   return chunks.filter((c) => c.trim().length > 0);
 }
 
+/* ---------- handler ---------- */
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -165,35 +208,26 @@ serve(async (req) => {
     const defaultYear = body.defaultYear ?? null;
     const defaultVersion = body.defaultVersion ?? null;
 
-    console.log("Starting ingest_from_storage with body:", body);
+    console.log("starting ingest_from_storage with body:", body);
 
-    // Collect target files
+    // bestanden bepalen
     let files: string[] = [];
     if (body.files && body.files.length > 0) {
       files = body.files;
     } else {
-      // List all files in bucket (paginate by 100)
-      let page = 0;
-      const limit = 100;
-      while (true) {
-        const { data, error } = await supabase.storage
-          .from(BUCKET)
-          .list("", { limit, offset: page * limit });
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-        files.push(...data.filter((o) => o.name).map((o) => o.name));
-        if (data.length < limit) break;
-        page++;
-      }
+      // recursief alle pdf’s uit bucket (root + submappen)
+      files = await listAllObjects(BUCKET, "");
     }
 
-    // Keep only PDFs, order deterministically and cap per run
-    files = files.filter((name) => name.toLowerCase().endsWith(".pdf"));
-    const maxFiles = Math.min(Math.max(Number((body as any).maxFiles ?? 20), 1), 100);
+    // ordelijk sorteren en cap toepassen
+    files = files.filter(Boolean);
     files.sort((a, b) => a.localeCompare(b));
+
+    // standaard 100 (i.p.v. 20), aan te passen via body.maxFiles
+    const maxFiles = Math.min(Math.max(Number(body.maxFiles ?? 100), 1), 1000);
     const selected = files.slice(0, maxFiles);
 
-    console.log(`Found ${files.length} PDFs, processing ${selected.length} this run (maxFiles=${maxFiles})`);
+    console.log(`found ${files.length} pdf(s), processing ${selected.length} this run (maxFiles=${maxFiles})`);
 
     const results: Array<{
       file: string;
@@ -207,10 +241,11 @@ serve(async (req) => {
       try {
         const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(name);
         const publicUrl = pub.publicUrl;
+
         const { party, title } = parsePartyAndTitle(name);
         const logBase = { path: name, party, title } as any;
 
-        // Skip if exists unless reingest
+        // overslaan als al bestaat (tenzij reingest)
         const { data: existing, error: existErr } = await supabase
           .from("documents")
           .select("id")
@@ -228,30 +263,27 @@ serve(async (req) => {
           if (docError) throw docError;
           documentId = document.id;
         } else if (reingest) {
-          // Update document metadata (party/title) in case parsing improves
           const { error: updErr } = await supabase
             .from("documents")
             .update({ party, title, year: defaultYear, version: defaultVersion })
             .eq("id", documentId);
           if (updErr) throw updErr;
 
-          // Clean old chunks for this doc
           const { error: delErr } = await supabase
             .from("chunks")
             .delete()
             .eq("document_id", documentId);
           if (delErr) throw delErr;
-        } else if (existing && !reingest) {
+        } else {
           results.push({ file: name, status: "skipped", message: "already ingested", document_id: documentId });
           await supabase.from("ingest_log").insert({ ...logBase, status: "skipped", message: "already ingested", doc_id: documentId });
           continue;
         }
 
-        // Extract text from PDF (simplified approach for now)
+        // pdf → tekst → chunks → embeddings
         const fullText = await extractPdfText(publicUrl, name);
         const parts = chunkText(fullText);
-        
-        // Create chunks and embeddings
+
         const rows: Array<{
           document_id: string;
           content: string;
@@ -260,7 +292,6 @@ serve(async (req) => {
           embedding: number[];
         }> = [];
 
-        // Batch embeddings for speed and fewer HTTP calls
         const EMBED_BATCH = 96;
         const embeddings: number[][] = [];
         for (let i = 0; i < parts.length; i += EMBED_BATCH) {
@@ -275,14 +306,13 @@ serve(async (req) => {
           rows.push({
             document_id: documentId!,
             content: part,
-            page: 1, // Single page for simplified approach
+            page: 1, // we chunken op tekst, niet per pagina
             tokens: part.split(/\s+/).length,
             embedding,
           });
         }
 
         if (rows.length === 0) {
-          // Should never happen, but keep a minimal record
           const placeholder = `Geen tekst geëxtraheerd uit ${title}.`;
           const embedding = await createEmbedding(placeholder);
           rows.push({
@@ -294,18 +324,20 @@ serve(async (req) => {
           });
         }
 
-        // Insert in smaller batches to avoid payload limits
-        const BATCH = 50;
-        for (let i = 0; i < rows.length; i += BATCH) {
-          const slice = rows.slice(i, i + BATCH);
+        // batches om payload limits te vermijden
+        const INSERT_BATCH = 50;
+        for (let i = 0; i < rows.length; i += INSERT_BATCH) {
+          const slice = rows.slice(i, i + INSERT_BATCH);
           const { error: insErr } = await supabase.from("chunks").insert(slice);
           if (insErr) throw insErr;
         }
 
         results.push({ file: name, status: "processed", document_id: documentId, chunks: rows.length });
-        await supabase.from("ingest_log").insert({ ...logBase, status: "processed", doc_id: documentId, message: `chunks:${rows.length}` });
+        await supabase
+          .from("ingest_log")
+          .insert({ ...logBase, status: "processed", doc_id: documentId, message: `chunks:${rows.length}` });
       } catch (e) {
-        console.error("Error processing file", name, e);
+        console.error("error processing file", name, e);
         results.push({ file: name, status: "error", message: (e as Error).message });
         await supabase.from("ingest_log").insert({ path: name, status: "error", message: (e as Error).message });
       }
@@ -319,13 +351,13 @@ serve(async (req) => {
       results,
     };
 
-    console.log("Ingest summary:", summary);
+    console.log("ingest summary:", summary);
 
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in ingest_from_storage:", error);
+    console.error("error in ingest_from_storage:", error);
     return new Response(
       JSON.stringify({ error: "Failed to ingest from storage", details: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
