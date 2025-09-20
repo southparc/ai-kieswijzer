@@ -58,6 +58,7 @@ export type Database = {
           document_id: string | null
           embedding: string | null
           id: string
+          metadata: Json | null
           page: number | null
           tokens: number | null
         }
@@ -66,6 +67,7 @@ export type Database = {
           document_id?: string | null
           embedding?: string | null
           id?: string
+          metadata?: Json | null
           page?: number | null
           tokens?: number | null
         }
@@ -74,6 +76,7 @@ export type Database = {
           document_id?: string | null
           embedding?: string | null
           id?: string
+          metadata?: Json | null
           page?: number | null
           tokens?: number | null
         }
@@ -224,9 +227,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analyze_chunk_quality: {
+        Args: { content_text: string }
+        Returns: Json
+      }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      get_party_coverage_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          artifact_percentage: number
+          avg_quality: number
+          party: string
+          themes: Json
+          total_chunks: number
+        }[]
       }
       get_query_count: {
         Args: Record<PropertyKey, never>
@@ -300,6 +317,18 @@ export type Database = {
           content: string
           page: number
           party: string
+          title: string
+          url: string
+        }[]
+      }
+      rag_topk_themed: {
+        Args: { k?: number; q_embedding: string; theme_filter?: string }
+        Returns: {
+          content: string
+          page: number
+          party: string
+          quality: number
+          theme: string
           title: string
           url: string
         }[]
