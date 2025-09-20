@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { inferThemeFromQuestion, deduplicateResults, crossEncoderRerank, classifyPartyStance } from './helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -183,14 +184,56 @@ serve(async (req) => {
       }
     }
 
-    // Search for relevant chunks using the RAG function (fetch many more)
-    // Ensure correct type for vector param (PostgREST expects text for "vector")
+    // Enhanced retrieval with theme filtering and higher top-k per party
+    const inferredTheme = inferThemeFromQuestion(question);
+    console.log('Inferred theme:', inferredTheme);
+    
+    // Get chunks with theme-aware retrieval
     const qVec = JSON.stringify(questionEmbedding);
-    const { data: ragResults, error: ragError } = await supabase
-      .rpc('rag_topk', {
-        q_embedding: qVec,
-        k: 128 // Fetch even more to ensure we get content for all parties
-      });
+    
+    // First pass: theme-filtered retrieval if we can infer a theme
+    let ragResults: any[] = [];
+    if (inferredTheme !== 'algemeen') {
+      const { data: themeResults } = await supabase
+        .from('chunks')
+        .select(`
+          content, page,
+          documents!inner (party, title, url)
+        `)
+        .textSearch('content', inferredTheme, { type: 'websearch' })
+        .limit(60);
+      
+      if (themeResults && themeResults.length > 0) {
+        ragResults = themeResults.map((r: any) => ({
+          content: r.content,
+          page: r.page,
+          party: r.documents.party,
+          title: r.documents.title,
+          url: r.documents.url
+        }));
+        console.log('Theme-filtered results:', ragResults.length);
+      }
+    }
+    
+    // Fallback: standard semantic search with higher k
+    if (ragResults.length < 30) {
+      const { data: semanticResults, error: ragError } = await supabase
+        .rpc('rag_topk', {
+          q_embedding: qVec,
+          k: 200 // Much higher to ensure coverage
+        });
+        
+      if (ragError) {
+        console.error('Error in RAG search:', ragError);
+        throw ragError;
+      }
+      
+      ragResults = [...ragResults, ...(semanticResults || [])];
+    }
+    
+    // Deduplicate and rerank results
+    ragResults = deduplicateResults(ragResults);
+    ragResults = crossEncoderRerank(ragResults, question).slice(0, 100);
 
     if (ragError) {
       console.error('Error in RAG search:', ragError);
@@ -278,7 +321,33 @@ serve(async (req) => {
       `**${result.party_norm}** (pagina ${result.page}): ${result.content}`
     ).join('\n\n');
 
-    // Generate AI response
+    // Enhanced AI response with 4-class classification per party
+    const partyAnalyses = await Promise.all(
+      allPartyResults.map(async (result: any) => {
+        const classification = await classifyPartyStance(result.content, question);
+        return {
+          ...result,
+          stance: classification.stance,
+          confidence: classification.confidence,
+          reasoning: classification.reasoning
+        };
+      })
+    );
+    
+    // Filter parties with sufficient evidence (not "unknown")
+    const partiesWithStance = partyAnalyses.filter(p => 
+      p.stance !== 'unknown' && p.confidence > 0.3
+    );
+    
+    console.log('Parties with clear stance:', partiesWithStance.map(p => 
+      `${p.party_norm}: ${p.stance} (${Math.round(p.confidence * 100)}%)`
+    ).join(', '));
+    
+    // Generate contextualized response
+    const enhancedContext = partiesWithStance.map((result: any) => 
+      `**${result.party_norm}** [${result.stance.toUpperCase()}, vertrouwen: ${Math.round(result.confidence * 100)}%] (pagina ${result.page}): ${result.content}`
+    ).join('\n\n');
+    
     const completion = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -286,32 +355,33 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           {
             role: 'system',
-            content: `Je bent een Nederlandse politieke adviseur die uitsluitend werkt met officiële verkiezingsprogramma's van 2025.
+            content: `Je bent een Nederlandse politieke adviseur die werkt met geclassificeerde standpunten uit verkiezingsprogramma's 2025.
 
-BELANGRIJK:
-- Gebruik ALLEEN informatie uit de gegeven context
-- Behandel uitsluitend partijen die in de context staan (${allPartyResults.length}): ${allPartyResults.map((r: any) => r.party_norm).join(', ')}
-- Nooit informatie verzinnen buiten de context
+CLASSIFICATIE-SYSTEEM:
+- PRO: Partij steunt het onderwerp/voorstel expliciet
+- CONTRA: Partij wijst het af of wil het tegendeel
+- NEUTRAL: Partij neemt bewust geen duidelijk standpunt
+- UNKNOWN: Onvoldoende bewijs in het programma (wordt weggelaten)
 
-Antwoordregels:
-- Geef per aanwezige partij een uitgebreide paragraaf met specifieke voorstellen, doelen/cijfers en motivatie
-- Structuur: ## Partijnaam gevolgd door een paragraaf
-- Als informatie ontbreekt voor een partij, sla die partij over en vermeld dat er geen context beschikbaar was
+ANTWOORDREGELS:
+- Behandel alleen partijen met duidelijke standpunten (${partiesWithStance.length} van ${allPartyResults.length} partijen)
+- Groepeer per standpunt: ## Voor, ## Tegen, ## Neutraal/Gemengd
+- Geef concrete voorstellen, cijfers en motivaties per partij
+- Vermeld aan het eind welke partijen onvoldoende informatie hadden
 
-Context van officiële verkiezingsprogramma's 2025:
-${context}`
+Geclassificeerde context (${partiesWithStance.length} partijen met duidelijke standpunten):
+${enhancedContext}`
           },
           {
             role: 'user',
             content: question
           }
         ],
-        max_tokens: 2500,
-        temperature: 0.2,
+        max_completion_tokens: 2500,
       }),
     });
 
