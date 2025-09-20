@@ -50,7 +50,7 @@ Chat over plannen van de partijen op basis van AI-analyse van alle partijprogram
               
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                 <span>v0.43 RAG verder verbeterd, chat toegevoegd en coalitie berekening aangpast  </span>
+                 <span>v0.5 RAG verder verbeterd, stemgedrag toegevoegd en coalitie berekening aangpast  </span>
                </div>
             </div>
             <div className="relative">
