@@ -35,17 +35,73 @@ Chat over plannen van de partijen op basis van AI-analyse van alle partijprogram
                 </Button>
               </div>
               
-              {/* Usage Counter */}
-              <div className="flex items-center justify-center sm:justify-start gap-2 text-muted-foreground text-sm sm:text-base">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span>
-                  {countLoading ? 'Laden...' : `${usageCount.toLocaleString('nl-NL')} keer gebruikt`}
-                </span>
-              </div>
+          import { useCallback, useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// verwacht tabel: public.usage_stats(id int pk, count int)
+// met één rij id=1. pas zo nodig table/filters aan.
+
+export function useUsageCount() {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  const [count, setCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCount = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("usage_stats")
+        .select("count")
+        .eq("id", 1)
+        .single();
+
+      if (error) throw error;
+      const n = Number(data?.count);
+      setCount(Number.isFinite(n) ? n : 0);
+      setError(null);
+    } catch (e: any) {
+      setError(e?.message ?? "onbekende fout");
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  useEffect(() => { fetchCount(); }, [fetchCount]);
+
+  // realtime updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("usage-stats-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "usage_stats", filter: "id=eq.1" },
+        (payload) => {
+          const next = Number((payload.new as any)?.count);
+          if (Number.isFinite(next)) setCount(next);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [supabase]);
+
+  // polling fallback (30s)
+  useEffect(() => {
+    const t = setInterval(fetchCount, 30000);
+    return () => clearInterval(t);
+  }, [fetchCount]);
+
+  return { count, loading, error, refetch: fetchCount };
+}
+
               
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                 <span>v0.42 RAG beter, index obv text, chat toegevoegd </span>
+                 <span>v0.44 interface aangepast, prompt voor coalitiekans verbeterd,  </span>
                </div>
             </div>
             <div className="relative">
