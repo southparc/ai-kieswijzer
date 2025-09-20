@@ -22,7 +22,17 @@ const Index = () => {
   const [appState, setAppState] = useState<AppState>("landing");
   const [quizResults, setQuizResults] = useState<PartyResult[]>([]);
   const [currentAnswers, setCurrentAnswers] = useState<Record<number, Answer>>({});
-  const [currentThemeWeights, setCurrentThemeWeights] = useState<ThemeWeights>({});
+  const [currentThemeWeights, setCurrentThemeWeights] = useState<ThemeWeights>({
+    economie: 100,
+    onderwijs: 100, 
+    zorg: 100,
+    klimaat: 100,
+    veiligheid: 100,
+    migratie: 100,
+    europa: 100,
+    wonen: 100,
+    digitalisering: 100
+  });
   const { parties, loading: partiesLoading, error: partiesError } = useParties();
   const { questions, loading: questionsLoading, error: questionsError } = useQuestions();
   

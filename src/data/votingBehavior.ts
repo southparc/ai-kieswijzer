@@ -38,7 +38,7 @@ export const mockVotingReferences: VotingReference[] = [
     statementId: "4",
     title: "Wetsvoorstel woningbouw versnelling", 
     date: "2024-01-25",
-    kamerstukken: "35000-VII-45",
+    kamernummer: "35000-VII-45",
     link: "https://www.tweedekamer.nl/kamerstukken/wetsvoorstellen/detail?id=35882",
     description: "Wet om woningbouwprocedures te versnellen en doelstellingen te verhogen"
   },

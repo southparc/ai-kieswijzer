@@ -16,7 +16,7 @@ function convertPartyToDualFormat(party: Party): PartyData {
   // Convert party positions to program stances
   const programStances = Object.entries(party.positions).map(([questionId, position]) => ({
     statementId: questionId,
-    pos: position === "agree" ? 1 : position === "disagree" ? -1 : 0,
+    pos: (position === "agree" ? 1 : position === "disagree" ? -1 : 0) as Pos,
     confidence: 0.8, // Default confidence for program positions
     evidenceRefs: [`program_${party.id}_${questionId}`]
   }));
