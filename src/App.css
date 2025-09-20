@@ -1,42 +1,122 @@
+/* root: compacter op mobiel, links uitlijnen */
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 1rem;            /* was 2rem */
+  text-align: left;         /* was center */
 }
 
+/* ruimtelijker vanaf sm/md/lg */
+@media (min-width: 640px) {
+  #root { padding: 1.25rem; }
+}
+@media (min-width: 768px) {
+  #root { padding: 1.5rem; max-width: 960px; }  /* focusbreedte */
+}
+@media (min-width: 1024px) {
+  #root { padding: 2rem; max-width: 1100px; }
+}
+
+/* standaard componenten uit vite-template (ongewijzigd of licht getweakt) */
 .logo {
   height: 6em;
-  padding: 1.5em;
+  padding: 1.25em;          /* iets compacter */
   will-change: filter;
   transition: filter 300ms;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+.logo:hover { filter: drop-shadow(0 0 2em #646cffaa); }
+.logo.react:hover { filter: drop-shadow(0 0 2em #61dafbaa); }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
-
 @media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  a:nth-of-type(2) .logo { animation: logo-spin infinite 20s linear; }
+}
+
+/* cards: dunnere padding op mobiel, loopt op op grotere schermen */
+.card { padding: 1rem; }            /* was 2em */
+@media (min-width: 640px) {
+  .card { padding: 1.25rem; }
+}
+@media (min-width: 768px) {
+  .card { padding: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .card { padding: 2rem; }
+}
+
+/* leesbaarheid van meta-teksten */
+.read-the-docs { color: #888; }
+
+/* -------------------------------------------
+   chat/input verbeteringen (globaal)
+   – grotere tekst op mobiel
+   – voldoende touch-target hoogte
+   – minder “dikke” look door subtielere radius/padding
+-------------------------------------------- */
+textarea,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="url"],
+input[type="password"],
+select {
+  font-size: 1rem;                 /* ~16px, goed mobiel */
+  line-height: 1.6;
+  padding: 0.75rem 0.875rem;       /* compacter dan default shadcn */
+  border-radius: 10px;             /* subtiel rond */
+}
+
+@media (min-width: 640px) {
+  textarea,
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="url"],
+  input[type="password"],
+  select {
+    font-size: 1.0625rem;          /* ~17px */
   }
 }
 
-.card {
-  padding: 2em;
+/* textarea standaard hoger voor chat */
+textarea {
+  min-height: 9rem;                /* ~5–6 regels */
+  resize: vertical;
 }
 
-.read-the-docs {
-  color: #888;
+/* knoppen: minimaal 44px hoog voor touch, iets grotere tekst */
+button,
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  padding: 0 1.25rem;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+/* optioneel: dunne borders i.p.v. dikke, zonder ze overal te overschrijven
+   (alleen als er geen tailwind border-2/border-4 classes worden gebruikt) */
+/*
+*:where(.card, textarea, input, select, button) {
+  border-width: 1px;
+}
+*/
+
+/* eventuele “te lage” hero/heading-secties:
+   verminder grote top-margins/paddings die vaak uit templates komen */
+.section,
+.header,
+.hero {
+  scroll-margin-top: 80px; /* fijner scrollgedrag */
+}
+@media (max-width: 640px) {
+  .section,
+  .header,
+  .hero {
+    padding-top: 1rem !important;   /* demp overdadige pt-10/pt-16 uit components */
+    margin-top: 0 !important;
+  }
 }
