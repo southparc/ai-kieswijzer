@@ -10,6 +10,7 @@ import { PartyResult } from "@/types/party";
 import { useParties } from "@/hooks/useParties";
 import { Button } from "@/components/ui/button";
 import { ThemeWeights } from "@/components/ThemeWeightSetup";
+import { supabase } from "@/integrations/supabase/client";
 
 // App state
 type AppState = "landing" | "advice" | "quiz" | "results" | "coalition";
@@ -24,11 +25,28 @@ const Index = () => {
   const handleStartQuiz = () => setAppState("quiz");
   const handleBackToLanding = () => setAppState("landing");
 
-  const handleQuizComplete = (answers: Record<number, Answer>, themeWeights: ThemeWeights) => {
+  const handleQuizComplete = async (answers: Record<number, Answer>, themeWeights: ThemeWeights) => {
     if (!parties || parties.length === 0 || !questions || questions.length === 0) return;
+    
+    // Calculate results
     const results = calculateResults(answers, parties, questions, themeWeights);
     setQuizResults(results);
     setAppState("results");
+
+    // Track quiz completion in database
+    try {
+      await supabase
+        .from('queries')
+        .insert({
+          question: 'Quiz completed',
+          themes: Object.keys(themeWeights),
+          weights: themeWeights as any,
+          user_id: null
+        });
+    } catch (error) {
+      console.error('Error tracking quiz completion:', error);
+      // Don't block the user flow if tracking fails
+    }
   };
 
   const handleRestartQuiz = () => setAppState("landing");
