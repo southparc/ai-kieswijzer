@@ -159,6 +159,77 @@ export type Database = {
         }
         Relationships: []
       }
+      party_program_positions: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          evidence_refs: string[] | null
+          id: string
+          party_name: string
+          program_position: number
+          statement_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          evidence_refs?: string[] | null
+          id?: string
+          party_name: string
+          program_position: number
+          statement_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          evidence_refs?: string[] | null
+          id?: string
+          party_name?: string
+          program_position?: number
+          statement_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      party_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          note: string | null
+          party_name: string
+          updated_at: string | null
+          vote_position: number
+          voting_reference_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          party_name: string
+          updated_at?: string | null
+          vote_position: number
+          voting_reference_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          party_name?: string
+          updated_at?: string | null
+          vote_position?: number
+          voting_reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_votes_voting_reference_id_fkey"
+            columns: ["voting_reference_id"]
+            isOneToOne: false
+            referencedRelation: "voting_references"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queries: {
         Row: {
           created_at: string | null
@@ -222,6 +293,42 @@ export type Database = {
         }
         Relationships: []
       }
+      voting_references: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          kamernummer: string | null
+          link: string | null
+          statement_id: string
+          title: string
+          updated_at: string | null
+          vote_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          kamernummer?: string | null
+          link?: string | null
+          statement_id: string
+          title: string
+          updated_at?: string | null
+          vote_date: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          kamernummer?: string | null
+          link?: string | null
+          statement_id?: string
+          title?: string
+          updated_at?: string | null
+          vote_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -243,6 +350,28 @@ export type Database = {
           party: string
           themes: Json
           total_chunks: number
+        }[]
+      }
+      get_party_dual_positions: {
+        Args: { target_party_name: string }
+        Returns: {
+          latest_vote_date: string
+          program_confidence: number
+          program_position: number
+          statement_id: string
+          vote_count: number
+          voting_position: number
+        }[]
+      }
+      get_party_voting_behavior: {
+        Args: { target_statement_id: string }
+        Returns: {
+          kamernummer: string
+          party_name: string
+          vote_date: string
+          vote_link: string
+          vote_position: number
+          vote_title: string
         }[]
       }
       get_query_count: {

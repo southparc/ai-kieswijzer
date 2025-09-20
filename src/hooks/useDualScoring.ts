@@ -3,7 +3,7 @@ import type { Party } from '@/types/party';
 import type { Answer } from '@/components/QuizInterface';
 import type { Question } from '@/components/QuizInterface';
 import type { ThemeWeights } from '@/components/ThemeWeightSetup';
-import type { PartyData, UserAnswer, DualPartyResult } from '@/types/dualScoring';
+import type { PartyData, UserAnswer, DualPartyResult, Pos } from '@/types/dualScoring';
 import { calculateAllDualScores, convertLegacyAnswers } from '@/utils/dualScoreCalculator';
 import { getPartyVotingBehavior } from '@/data/votingBehavior';
 

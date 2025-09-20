@@ -23,15 +23,16 @@ const Index = () => {
   const [quizResults, setQuizResults] = useState<PartyResult[]>([]);
   const [currentAnswers, setCurrentAnswers] = useState<Record<number, Answer>>({});
   const [currentThemeWeights, setCurrentThemeWeights] = useState<ThemeWeights>({
-    economie: 100,
-    onderwijs: 100, 
-    zorg: 100,
-    klimaat: 100,
-    veiligheid: 100,
-    migratie: 100,
-    europa: 100,
-    wonen: 100,
-    digitalisering: 100
+    "Zorg & Welzijn": 100,
+    "Wonen": 100,
+    "Klimaat & Milieu": 100,
+    "Immigratie & Integratie": 100,
+    "Onderwijs": 100,
+    "Economie & Financiën": 100,
+    "Veiligheid & Defensie": 100,
+    "Europa & Buitenland": 100,
+    "Veiligheid & Justitie": 100,
+    "Werk & Sociale Zekerheid": 100
   });
   const { parties, loading: partiesLoading, error: partiesError } = useParties();
   const { questions, loading: questionsLoading, error: questionsError } = useQuestions();
