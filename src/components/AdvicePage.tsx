@@ -149,18 +149,18 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
 
   return (
     <div className="bg-gradient-background">
-      <div className="max-w-full px-[5%] py-4 md:py-8">
+      <div className="max-w-full px-3 md:px-[5%] py-2 md:py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" onClick={onBack} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Terug
           </Button>
-          <h1 className="text-xl md:text-3xl font-bold">Politiek Advies</h1>
+          <h1 className="text-lg md:text-3xl font-bold">Politiek Advies</h1>
         </div>
 
         {/* Input Section */}
-        <Card className="p-6 mb-8">
+        <Card className="p-3 md:p-6 mb-8">
           <div className="space-y-6">
             {/* Question Input */}
             <div>
@@ -195,22 +195,22 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
         {result && (
           <div className="space-y-6">
             {/* Chat Interface */}
-            <Card className="p-6">
+            <Card className="p-3 md:p-6">
               <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" />
                 Gesprek over Nederlandse Politiek
               </h3>
               
               {/* Chat History */}
-              <div className="mb-4 max-h-96 md:max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-2 md:p-4 space-y-2 md:space-y-4">
+              <div className="mb-4 max-h-80 md:max-h-96 overflow-y-auto border rounded-lg bg-gray-50 p-1.5 md:p-4 space-y-1 md:space-y-4">
                 {conversationHistory.map((msg, index) => (
                   <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] md:max-w-[80%] p-2 md:p-3 rounded-lg ${
+                    <div className={`max-w-[85%] md:max-w-[80%] p-1.5 md:p-3 rounded-lg ${
                       msg.role === 'user' 
                         ? 'bg-blue-600 text-white' 
                         : 'bg-white border shadow-sm'
                     }`}>
-                      <div className="prose prose-xs md:prose-sm max-w-none">
+                      <div className="prose prose-sm md:prose-base max-w-none">
                         {msg.role === 'assistant' ? (
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         ) : (
@@ -261,7 +261,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
 
             {/* Sources - moved to bottom */}
             {result.sources && result.sources.length > 0 && (
-              <Card className="p-6">
+              <Card className="p-3 md:p-6">
                 <h3 className="text-base md:text-lg font-semibold mb-4">
                   Bronnen ({result.sources.length})
                 </h3>
