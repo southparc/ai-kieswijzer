@@ -127,3 +127,33 @@ All colors MUST be HSL.
 .compact-bullets ul {
   margin-bottom: 1em;
 }
+
+/* Mobile optimizations for maximum readability */
+@media (max-width: 768px) {
+  /* Force smaller card padding on mobile */
+  .card {
+    padding: 0.5rem !important;
+  }
+  
+  /* Improve text readability on mobile */
+  .prose {
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Optimize heading spacing */
+  h1, h2, h3 {
+    margin-bottom: 0.5rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Make chat messages more compact */
+  .prose p {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Optimize table display on mobile */
+  table {
+    font-size: 0.85rem !important;
+  }
+}
