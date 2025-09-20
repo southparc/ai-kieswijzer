@@ -115,12 +115,24 @@ export const ResultsPage = ({ results, onRestart, onViewCoalition }: ResultsPage
         {/* Top Match */}
         <Card className="p-8 mb-8 shadow-elegant border-2 border-primary/20 max-w-4xl mx-auto">
           <div className="text-center space-y-4">
-            <h2 className="text-2xl font-semibold text-primary">
-              Beste match: {topMatch.party.name}
-            </h2>
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-2xl font-semibold text-primary">
+                Beste match: {topMatch.party.name}
+              </h2>
+              {!topMatch.reliability?.isReliable && (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                  Betrouwbaarheid laag
+                </span>
+              )}
+            </div>
             <div className="text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               {topMatch.percentage}%
             </div>
+            {topMatch.rawPercentage && topMatch.penalty && (
+              <div className="text-sm text-muted-foreground">
+                Ruw: {topMatch.rawPercentage}% - Straf: {topMatch.penalty}% = {topMatch.percentage}%
+              </div>
+            )}
             <p className="text-lg text-muted-foreground">
               {topMatch.party.description}
             </p>
@@ -159,6 +171,12 @@ export const ResultsPage = ({ results, onRestart, onViewCoalition }: ResultsPage
                   type="disagreements" 
                 />
               </Dialog>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {topMatch.weightedCoverage || topMatch.coverage}%
+                </div>
+                <div>Dekking</div>
+              </div>
             </div>
           </div>
         </Card>
@@ -178,10 +196,22 @@ export const ResultsPage = ({ results, onRestart, onViewCoalition }: ResultsPage
                 
                 <div className="flex-grow">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-xl font-semibold">{result.party.name}</h4>
-                    <span className="text-lg font-bold text-primary">
-                      {result.percentage}%
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xl font-semibold">{result.party.name}</h4>
+                      {!result.reliability?.isReliable && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                          Laag
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-primary">
+                        {result.percentage}%
+                      </span>
+                      <div className="text-xs text-muted-foreground">
+                        Dekking: {result.weightedCoverage || result.coverage}%
+                      </div>
+                    </div>
                   </div>
                   
                   <Progress 

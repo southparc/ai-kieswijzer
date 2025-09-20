@@ -27,15 +27,24 @@ export interface PartyResult {
   party: Party;
   score: number;
   percentage: number;
+  rawScore?: number;
+  rawPercentage?: number;
+  penalty?: number;
   agreements: number;
   disagreements: number;
   breakdown: QuestionBreakdown[];
   coalitionChance?: number;
   coverage?: number;
+  weightedCoverage?: number;
   perfectMatches?: number;
   conflicts?: number;
   neutralAlignments?: number;
   partialMatches?: number;
+  reliability?: {
+    answered: number;
+    total: number;
+    isReliable: boolean;
+  };
 }
 
 export interface CoalitionResult {
