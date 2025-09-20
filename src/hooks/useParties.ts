@@ -98,19 +98,19 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
     },
     'GroenLinks-PvdA': {
       // Green-left alliance: climate priority, social justice, pro-refugee, wealth redistribution
-      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
-      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
-      11: "disagree", 12: "disagree", 13: "disagree", 14: "disagree", 15: "disagree",
-      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
-      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "neutral"
+      1: "agree", 2: "disagree", 3: "agree", 4: "agree", 5: "disagree",
+      6: "agree", 7: "disagree", 8: "agree", 9: "disagree", 10: "agree",
+      11: "disagree", 12: "agree", 13: "disagree", 14: "disagree", 15: "disagree",
+      16: "agree", 17: "disagree", 18: "agree", 19: "disagree", 20: "agree",
+      21: "disagree", 22: "agree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'SP': {
       // Socialist: pro-worker, anti-EU elite, public services, wealth redistribution
-      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
-      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
-      11: "disagree", 12: "disagree", 13: "disagree", 14: "disagree", 15: "disagree",
-      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
-      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "neutral"
+      1: "agree", 2: "neutral", 3: "agree", 4: "agree", 5: "neutral",
+      6: "agree", 7: "disagree", 8: "agree", 9: "disagree", 10: "agree",
+      11: "disagree", 12: "agree", 13: "disagree", 14: "disagree", 15: "neutral",
+      16: "agree", 17: "disagree", 18: "agree", 19: "disagree", 20: "agree",
+      21: "neutral", 22: "agree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'FvD': {
       // Conservative right: anti-immigration, climate skeptic, traditional values, Eurosceptic
@@ -122,11 +122,11 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
     },
     'Partij voor de Dieren': {
       // Animal rights: climate priority, animal welfare, sustainable agriculture
-      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
-      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
-      11: "disagree", 12: "disagree", 13: "neutral", 14: "disagree", 15: "disagree",
-      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
-      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "agree"
+      1: "agree", 2: "disagree", 3: "agree", 4: "disagree", 5: "disagree",
+      6: "agree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
+      11: "disagree", 12: "agree", 13: "neutral", 14: "disagree", 15: "disagree",
+      16: "agree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "disagree", 22: "disagree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'ChristenUnie': {
       // Christian social: family values, care for creation, social justice, moderate
@@ -178,19 +178,19 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
     },
     'SGP': {
       // Reformed Christian: traditional Christian values, family-focused
-      1: "agree", 2: "agree", 3: "agree", 4: "agree", 5: "agree",
-      6: "agree", 7: "agree", 8: "agree", 9: "agree", 10: "agree",
-      11: "agree", 12: "agree", 13: "agree", 14: "agree", 15: "agree",
+      1: "neutral", 2: "agree", 3: "agree", 4: "neutral", 5: "neutral",
+      6: "agree", 7: "agree", 8: "agree", 9: "neutral", 10: "agree",
+      11: "neutral", 12: "agree", 13: "agree", 14: "agree", 15: "agree",
       16: "agree", 17: "agree", 18: "agree", 19: "neutral", 20: "agree",
       21: "neutral", 22: "agree", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'DENK': {
       // Diversity party: multicultural, social justice, pro-minority rights
-      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
-      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
-      11: "disagree", 12: "disagree", 13: "neutral", 14: "disagree", 15: "disagree",
-      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
-      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "neutral"
+      1: "agree", 2: "disagree", 3: "agree", 4: "agree", 5: "disagree",
+      6: "agree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "agree",
+      11: "disagree", 12: "agree", 13: "neutral", 14: "disagree", 15: "disagree",
+      16: "agree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "agree",
+      21: "disagree", 22: "agree", 23: "disagree", 24: "disagree", 25: "neutral"
     }
   };
   
