@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LandingPage } from "@/components/LandingPage";
 import { AdvicePage } from "@/components/AdvicePage";
+import { QualityDashboard } from "@/components/QualityDashboard";
 import { QuizInterface, Answer } from "@/components/QuizInterface";
 import { ResultsPage } from "@/components/ResultsPage";
 import { CoalitionPage } from "@/components/CoalitionPage";
@@ -13,7 +14,7 @@ import { ThemeWeights } from "@/components/ThemeWeightSetup";
 import { supabase } from "@/integrations/supabase/client";
 
 // App state
-type AppState = "landing" | "advice" | "quiz" | "results" | "coalition";
+type AppState = "landing" | "advice" | "quality" | "quiz" | "results" | "coalition";
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>("landing");
@@ -23,6 +24,7 @@ const Index = () => {
 
   const handleStart = () => setAppState("advice");
   const handleStartQuiz = () => setAppState("quiz");
+  const handleViewQuality = () => setAppState("quality");
   const handleBackToLanding = () => setAppState("landing");
 
   const handleQuizComplete = async (answers: Record<number, Answer>, themeWeights: ThemeWeights) => {
@@ -82,10 +84,13 @@ const Index = () => {
 
   switch (appState) {
     case "landing":
-      return <LandingPage onStart={handleStart} onStartQuiz={handleStartQuiz} />;
+      return <LandingPage onStart={handleStart} onStartQuiz={handleStartQuiz} onViewQuality={handleViewQuality} />;
 
     case "advice":
       return <AdvicePage onBack={handleBackToLanding} />;
+
+    case "quality":
+      return <QualityDashboard onBack={handleBackToLanding} />;
 
     case "quiz":
       return (
@@ -103,7 +108,7 @@ const Index = () => {
       return <CoalitionPage results={quizResults} onRestart={handleRestartQuiz} />;
 
     default:
-      return <LandingPage onStart={handleStart} onStartQuiz={handleStartQuiz} />;
+      return <LandingPage onStart={handleStart} onStartQuiz={handleStartQuiz} onViewQuality={handleViewQuality} />;
   }
 };
 

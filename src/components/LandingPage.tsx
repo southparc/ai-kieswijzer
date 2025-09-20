@@ -6,10 +6,12 @@ import { useUsageCount } from "@/hooks/useUsageCount";
 interface LandingPageProps {
   onStart: () => void;
   onStartQuiz: () => void;
+  onViewQuality: () => void;
 }
 export const LandingPage = ({
   onStart,
-  onStartQuiz
+  onStartQuiz,
+  onViewQuality
 }: LandingPageProps) => {
   const { count: usageCount, loading: countLoading } = useUsageCount();
   return <div className="bg-gradient-background">
@@ -32,6 +34,9 @@ Chat over plannen van de partijen op basis van AI-analyse van alle partijprogram
                 </Button>
                 <Button size="lg" variant="dutch-blue" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStartQuiz}>
                   Stemwijzer Quiz
+                </Button>
+                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
+                  📊 Kwaliteitsdashboard
                 </Button>
               </div>
               

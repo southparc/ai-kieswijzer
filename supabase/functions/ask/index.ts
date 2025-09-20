@@ -188,29 +188,19 @@ serve(async (req) => {
     const inferredTheme = inferThemeFromQuestion(question);
     console.log('Inferred theme:', inferredTheme);
     
-    // Get chunks with theme-aware retrieval
-    const qVec = JSON.stringify(questionEmbedding);
+    let ragResults: any[] = [];
     
     // First pass: theme-filtered retrieval if we can infer a theme
-    let ragResults: any[] = [];
     if (inferredTheme !== 'algemeen') {
-      const { data: themeResults } = await supabase
-        .from('chunks')
-        .select(`
-          content, page,
-          documents!inner (party, title, url)
-        `)
-        .textSearch('content', inferredTheme, { type: 'websearch' })
-        .limit(60);
+      const { data: themeResults, error: themeError } = await supabase
+        .rpc('rag_topk_themed', {
+          q_embedding: qVec,
+          theme_filter: inferredTheme,
+          k: 60
+        });
       
-      if (themeResults && themeResults.length > 0) {
-        ragResults = themeResults.map((r: any) => ({
-          content: r.content,
-          page: r.page,
-          party: r.documents.party,
-          title: r.documents.title,
-          url: r.documents.url
-        }));
+      if (!themeError && themeResults && themeResults.length > 0) {
+        ragResults = themeResults;
         console.log('Theme-filtered results:', ragResults.length);
       }
     }
@@ -394,21 +384,24 @@ ${enhancedContext}`
 
     console.log('Generated AI response');
 
-    // Prepare sources (ALL parties)
+    // Prepare sources with enhanced metadata
     const sources = allPartyResults.map((result: any) => ({
       party: result.party_norm,
       page: result.page,
-      url: result.url
+      url: result.url,
+      stance: result.stance || 'unknown',
+      confidence: result.confidence || 0,
+      theme: result.theme || 'algemeen'
     }));
 
-    // Store the answer
+    // Store the answer with enhanced metadata
     const { error: answerError } = await supabase
       .from('answers')
       .insert({
         query_id: queryData.id,
         answer_md: answer,
         sources: sources,
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         latency_ms: Date.now() - new Date(queryData.created_at).getTime()
       });
 
