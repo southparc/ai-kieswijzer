@@ -78,9 +78,8 @@ export const calculateResults = (
             });
           } else if ((userAnswer === "neutral" && partyAnswer !== "neutral") || 
                      (userAnswer !== "neutral" && partyAnswer === "neutral")) {
-            // One is neutral, other has position - minimal credit
-            weightedMatches += weight * 0.1;
-            disagreements++;
+            // One is neutral, other has position - partial credit, don't count as disagreement
+            weightedMatches += weight * 0.4;
             breakdown.push({
               questionId: qId,
               userAnswer,

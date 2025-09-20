@@ -66,83 +66,131 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
   const partyProfiles: Record<string, Partial<Record<number, "agree" | "neutral" | "disagree">>> = {
     'VVD': {
       // Liberal party: pro-business, lower taxes, strong defense, pro-EU, moderate on climate
-      4: "agree", 5: "agree", 7: "agree", 13: "agree", 17: "agree", 22: "agree", 25: "agree",
-      2: "disagree", 6: "disagree", 8: "disagree", 9: "disagree", 11: "disagree", 14: "disagree", 15: "disagree", 18: "disagree", 19: "disagree", 23: "disagree", 24: "neutral"
+      1: "disagree", 2: "agree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "disagree", 7: "agree", 8: "disagree", 9: "agree", 10: "disagree",
+      11: "agree", 12: "disagree", 13: "disagree", 14: "agree", 15: "neutral",
+      16: "disagree", 17: "agree", 18: "disagree", 19: "agree", 20: "agree",
+      21: "agree", 22: "disagree", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'D66': {
       // Progressive liberal: pro-EU, education, climate action, social liberal
-      1: "agree", 3: "agree", 6: "agree", 12: "agree", 13: "agree", 16: "agree", 17: "agree", 19: "agree", 21: "agree", 25: "agree",
-      9: "disagree", 11: "neutral", 22: "disagree", 24: "agree"
+      1: "disagree", 2: "agree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "disagree", 7: "agree", 8: "disagree", 9: "agree", 10: "disagree",
+      11: "agree", 12: "disagree", 13: "disagree", 14: "agree", 15: "disagree",
+      16: "disagree", 17: "agree", 18: "disagree", 19: "agree", 20: "disagree",
+      21: "agree", 22: "disagree", 23: "agree", 24: "disagree", 25: "disagree"
     },
     'PVV': {
       // Populist right: anti-immigration, anti-EU, pro-welfare for natives, tough on crime
-      1: "agree", 4: "agree", 5: "agree", 9: "agree", 11: "agree", 18: "agree", 21: "agree", 22: "agree",
-      2: "disagree", 3: "disagree", 6: "disagree", 8: "neutral", 12: "disagree", 15: "disagree", 16: "disagree", 17: "neutral", 19: "disagree", 20: "disagree", 23: "disagree", 24: "disagree", 25: "neutral"
+      1: "agree", 2: "disagree", 3: "agree", 4: "disagree", 5: "disagree",
+      6: "agree", 7: "disagree", 8: "agree", 9: "disagree", 10: "agree",
+      11: "disagree", 12: "agree", 13: "agree", 14: "disagree", 15: "agree",
+      16: "agree", 17: "disagree", 18: "agree", 19: "disagree", 20: "neutral",
+      21: "disagree", 22: "agree", 23: "disagree", 24: "agree", 25: "agree"
     },
     'CDA': {
       // Christian democrat: moderate, family values, environmental stewardship, pro-EU
-      1: "agree", 3: "agree", 5: "neutral", 17: "agree", 21: "agree", 24: "agree",
-      9: "disagree", 12: "disagree", 15: "neutral", 19: "neutral", 23: "neutral"
+      1: "neutral", 2: "agree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "neutral", 7: "agree", 8: "disagree", 9: "agree", 10: "agree",
+      11: "agree", 12: "disagree", 13: "agree", 14: "agree", 15: "agree",
+      16: "disagree", 17: "agree", 18: "neutral", 19: "agree", 20: "agree",
+      21: "neutral", 22: "agree", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'GroenLinks-PvdA': {
       // Green-left alliance: climate priority, social justice, pro-refugee, wealth redistribution
-      1: "agree", 2: "agree", 3: "agree", 6: "agree", 8: "agree", 10: "agree", 11: "neutral", 12: "agree", 14: "agree", 15: "agree", 16: "agree", 17: "agree", 18: "agree", 19: "agree", 20: "agree", 21: "agree", 23: "agree", 24: "agree",
-      4: "disagree", 5: "neutral", 7: "disagree", 9: "disagree", 13: "disagree", 22: "disagree", 25: "neutral"
+      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
+      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
+      11: "disagree", 12: "disagree", 13: "disagree", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "neutral"
     },
     'SP': {
       // Socialist: pro-worker, anti-EU elite, public services, wealth redistribution
-      1: "agree", 6: "agree", 8: "agree", 11: "agree", 14: "agree", 15: "agree", 18: "agree", 19: "agree", 21: "agree", 23: "agree",
-      4: "disagree", 7: "neutral", 9: "neutral", 13: "neutral", 22: "neutral", 25: "neutral"
+      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
+      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
+      11: "disagree", 12: "disagree", 13: "disagree", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "neutral"
     },
     'FvD': {
       // Conservative right: anti-immigration, climate skeptic, traditional values, Eurosceptic
-      5: "agree", 9: "agree", 22: "agree", 25: "agree",
-      2: "disagree", 3: "disagree", 6: "neutral", 10: "disagree", 12: "disagree", 15: "disagree", 16: "disagree", 17: "neutral", 19: "disagree", 20: "disagree", 23: "disagree", 24: "disagree"
+      1: "agree", 2: "agree", 3: "agree", 4: "disagree", 5: "disagree",
+      6: "agree", 7: "disagree", 8: "agree", 9: "disagree", 10: "agree",
+      11: "disagree", 12: "agree", 13: "agree", 14: "disagree", 15: "agree",
+      16: "agree", 17: "disagree", 18: "agree", 19: "disagree", 20: "neutral",
+      21: "disagree", 22: "agree", 23: "disagree", 24: "agree", 25: "neutral"
     },
     'Partij voor de Dieren': {
       // Animal rights: climate priority, animal welfare, sustainable agriculture
-      1: "neutral", 3: "agree", 10: "agree", 16: "agree", 20: "agree", 24: "agree",
-      5: "neutral", 7: "disagree", 9: "neutral", 22: "neutral", 25: "neutral"
+      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
+      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
+      11: "disagree", 12: "disagree", 13: "neutral", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "agree"
     },
     'ChristenUnie': {
       // Christian social: family values, care for creation, social justice, moderate
-      1: "agree", 3: "agree", 21: "agree", 24: "agree",
-      9: "disagree", 12: "disagree", 15: "neutral", 19: "neutral", 23: "neutral"
+      1: "agree", 2: "agree", 3: "agree", 4: "neutral", 5: "agree",
+      6: "agree", 7: "agree", 8: "disagree", 9: "agree", 10: "agree",
+      11: "agree", 12: "disagree", 13: "agree", 14: "agree", 15: "agree",
+      16: "agree", 17: "agree", 18: "neutral", 19: "agree", 20: "agree",
+      21: "neutral", 22: "agree", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'NSC': {
       // New party: good governance, pragmatic center, reliable administration
-      1: "neutral", 3: "neutral", 5: "neutral", 17: "agree", 21: "agree",
-      9: "neutral", 15: "neutral", 23: "neutral"
+      1: "neutral", 2: "agree", 3: "neutral", 4: "agree", 5: "agree",
+      6: "neutral", 7: "agree", 8: "neutral", 9: "agree", 10: "neutral",
+      11: "agree", 12: "disagree", 13: "neutral", 14: "agree", 15: "neutral",
+      16: "neutral", 17: "agree", 18: "neutral", 19: "agree", 20: "neutral",
+      21: "neutral", 22: "neutral", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'BBB': {
       // Farmer-Citizen movement: rural interests, against climate restrictions on farming
-      1: "neutral", 4: "agree", 7: "agree",
-      3: "disagree", 10: "disagree", 16: "neutral", 20: "disagree", 24: "disagree"
+      1: "agree", 2: "neutral", 3: "neutral", 4: "neutral", 5: "neutral",
+      6: "agree", 7: "neutral", 8: "agree", 9: "neutral", 10: "neutral",
+      11: "neutral", 12: "neutral", 13: "neutral", 14: "neutral", 15: "neutral",
+      16: "agree", 17: "neutral", 18: "agree", 19: "neutral", 20: "neutral",
+      21: "neutral", 22: "neutral", 23: "neutral", 24: "disagree", 25: "neutral"
     },
     'Volt': {
       // European movement: pro-EU, innovation, climate action, progressive
-      3: "agree", 6: "agree", 13: "agree", 16: "agree", 17: "agree", 19: "agree", 21: "agree", 25: "agree",
-      9: "disagree", 22: "neutral"
+      1: "disagree", 2: "agree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "disagree", 7: "agree", 8: "disagree", 9: "agree", 10: "disagree",
+      11: "agree", 12: "disagree", 13: "disagree", 14: "agree", 15: "disagree",
+      16: "disagree", 17: "agree", 18: "disagree", 19: "agree", 20: "disagree",
+      21: "agree", 22: "disagree", 23: "agree", 24: "disagree", 25: "disagree"
     },
     'JA21': {
       // Liberal conservative: Dutch values, moderate right, pro-business
-      4: "agree", 5: "agree", 22: "agree", 25: "agree",
-      2: "disagree", 9: "neutral", 15: "disagree", 19: "neutral", 23: "disagree"
+      1: "agree", 2: "agree", 3: "agree", 4: "agree", 5: "agree",
+      6: "neutral", 7: "agree", 8: "neutral", 9: "agree", 10: "agree",
+      11: "agree", 12: "disagree", 13: "agree", 14: "agree", 15: "neutral",
+      16: "neutral", 17: "agree", 18: "neutral", 19: "agree", 20: "neutral",
+      21: "agree", 22: "neutral", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'BVNL': {
       // Dutch sovereignty: anti-lockdown, freedom-focused, Eurosceptic
-      4: "agree", 5: "neutral", 22: "neutral",
-      9: "neutral", 15: "neutral", 19: "neutral", 23: "neutral"
+      1: "agree", 2: "neutral", 3: "agree", 4: "neutral", 5: "neutral",
+      6: "agree", 7: "neutral", 8: "agree", 9: "neutral", 10: "neutral",
+      11: "neutral", 12: "neutral", 13: "agree", 14: "neutral", 15: "neutral",
+      16: "neutral", 17: "neutral", 18: "agree", 19: "neutral", 20: "neutral",
+      21: "neutral", 22: "neutral", 23: "neutral", 24: "disagree", 25: "neutral"
     },
     'SGP': {
       // Reformed Christian: traditional Christian values, family-focused
-      1: "neutral", 21: "agree",
-      9: "neutral", 12: "disagree", 15: "neutral", 19: "neutral", 23: "disagree"
+      1: "agree", 2: "agree", 3: "agree", 4: "agree", 5: "agree",
+      6: "agree", 7: "agree", 8: "agree", 9: "agree", 10: "agree",
+      11: "agree", 12: "agree", 13: "agree", 14: "agree", 15: "agree",
+      16: "agree", 17: "agree", 18: "agree", 19: "neutral", 20: "agree",
+      21: "neutral", 22: "agree", 23: "agree", 24: "disagree", 25: "neutral"
     },
     'DENK': {
       // Diversity party: multicultural, social justice, pro-minority rights
-      1: "agree", 2: "agree", 6: "agree", 14: "agree", 15: "agree", 18: "agree", 21: "agree",
-      9: "neutral", 22: "neutral"
+      1: "disagree", 2: "disagree", 3: "disagree", 4: "disagree", 5: "disagree",
+      6: "disagree", 7: "disagree", 8: "disagree", 9: "disagree", 10: "disagree",
+      11: "disagree", 12: "disagree", 13: "neutral", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "disagree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "disagree", 22: "disagree", 23: "disagree", 24: "agree", 25: "neutral"
     }
   };
   
