@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Loader2, ExternalLink, Send, MessageCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Send, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 
@@ -12,15 +11,9 @@ interface AdvicePageProps {
   onBack: () => void;
 }
 
-interface Source {
-  party: string;
-  page: number;
-  url: string;
-}
 
 interface AdviceResult {
   answer: string;
-  sources: Source[];
 }
 
 interface DocumentStats {
@@ -70,8 +63,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
       if (error) throw error;
 
       const resultData = {
-        answer: data.answer || "Geen antwoord beschikbaar.",
-        sources: data.sources || []
+        answer: data.answer || "Geen antwoord beschikbaar."
       };
 
       setResult(resultData);
@@ -85,8 +77,7 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
     } catch (error) {
       console.error('Error getting advice:', error);
       setResult({
-        answer: "Er is een fout opgetreden bij het ophalen van het advies. Probeer het opnieuw.",
-        sources: []
+        answer: "Er is een fout opgetreden bij het ophalen van het advies. Probeer het opnieuw."
       });
     } finally {
       setLoading(false);
@@ -259,44 +250,6 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
               </p>
             </Card>
 
-            {/* Sources - moved to bottom */}
-            {result.sources && result.sources.length > 0 && (
-              <Card className="p-3 md:p-6">
-                <h3 className="text-base md:text-lg font-semibold mb-4">
-                  Bronnen ({result.sources.length})
-                </h3>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Partij</TableHead>
-                        <TableHead>Pagina</TableHead>
-                        <TableHead>Document</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {result.sources.map((source, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{source.party}</TableCell>
-                          <TableCell>{source.page}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(source.url, '_blank')}
-                              className="gap-2"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              Bekijk document
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
-            )}
           </div>
         )}
 
