@@ -20,7 +20,7 @@ export interface QuestionBreakdown {
   questionId: number;
   userAnswer: "agree" | "neutral" | "disagree";
   partyAnswer: "agree" | "neutral" | "disagree";
-  result: "agreement" | "disagreement" | "neutral_match" | "neutral_partial";
+  result: "perfect_match" | "conflict" | "neutral_alignment" | "partial_match";
 }
 
 export interface PartyResult {
@@ -31,6 +31,11 @@ export interface PartyResult {
   disagreements: number;
   breakdown: QuestionBreakdown[];
   coalitionChance?: number;
+  coverage?: number;
+  perfectMatches?: number;
+  conflicts?: number;
+  neutralAlignments?: number;
+  partialMatches?: number;
 }
 
 export interface CoalitionResult {

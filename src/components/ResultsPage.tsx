@@ -25,8 +25,8 @@ const BreakdownDialog = ({
 }) => {
   const filteredBreakdown = breakdown.filter(item => 
     type === 'agreements' 
-      ? item.result === 'agreement' 
-      : item.result === 'disagreement'
+      ? item.result === 'perfect_match' || item.result === 'neutral_alignment' 
+      : item.result === 'conflict'
   );
 
   const getAnswerColor = (answer: "agree" | "neutral" | "disagree") => {
