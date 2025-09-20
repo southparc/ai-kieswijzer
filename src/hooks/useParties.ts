@@ -82,11 +82,11 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
     },
     'PVV': {
       // Populist right: anti-immigration, anti-EU, pro-welfare for natives, tough on crime
-      1: "agree", 2: "disagree", 3: "agree", 4: "disagree", 5: "disagree",
-      6: "agree", 7: "disagree", 8: "agree", 9: "disagree", 10: "agree",
-      11: "disagree", 12: "agree", 13: "agree", 14: "disagree", 15: "agree",
-      16: "agree", 17: "disagree", 18: "agree", 19: "disagree", 20: "neutral",
-      21: "disagree", 22: "agree", 23: "disagree", 24: "agree", 25: "agree"
+      1: "neutral", 2: "disagree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "neutral", 7: "agree", 8: "disagree", 9: "agree", 10: "disagree",
+      11: "agree", 12: "disagree", 13: "agree", 14: "agree", 15: "disagree",
+      16: "disagree", 17: "neutral", 18: "agree", 19: "disagree", 20: "disagree",
+      21: "agree", 22: "agree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'CDA': {
       // Christian democrat: moderate, family values, environmental stewardship, pro-EU
@@ -114,11 +114,11 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
     },
     'FvD': {
       // Conservative right: anti-immigration, climate skeptic, traditional values, Eurosceptic
-      1: "agree", 2: "agree", 3: "agree", 4: "disagree", 5: "disagree",
-      6: "agree", 7: "disagree", 8: "agree", 9: "disagree", 10: "agree",
-      11: "disagree", 12: "agree", 13: "agree", 14: "disagree", 15: "agree",
-      16: "agree", 17: "disagree", 18: "agree", 19: "disagree", 20: "neutral",
-      21: "disagree", 22: "agree", 23: "disagree", 24: "agree", 25: "neutral"
+      1: "agree", 2: "disagree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "disagree", 7: "agree", 8: "disagree", 9: "agree", 10: "disagree",
+      11: "neutral", 12: "disagree", 13: "agree", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "neutral", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "neutral", 22: "agree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'Partij voor de Dieren': {
       // Animal rights: climate priority, animal welfare, sustainable agriculture
@@ -162,19 +162,19 @@ const generateDefaultPositions = (partyName: string): Record<number, "agree" | "
     },
     'JA21': {
       // Liberal conservative: Dutch values, moderate right, pro-business
-      1: "agree", 2: "agree", 3: "agree", 4: "agree", 5: "agree",
-      6: "neutral", 7: "agree", 8: "neutral", 9: "agree", 10: "agree",
-      11: "agree", 12: "disagree", 13: "agree", 14: "agree", 15: "neutral",
-      16: "neutral", 17: "agree", 18: "neutral", 19: "agree", 20: "neutral",
-      21: "agree", 22: "neutral", 23: "agree", 24: "disagree", 25: "neutral"
+      1: "neutral", 2: "disagree", 3: "disagree", 4: "agree", 5: "agree",
+      6: "disagree", 7: "agree", 8: "disagree", 9: "neutral", 10: "disagree",
+      11: "disagree", 12: "disagree", 13: "agree", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "agree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "neutral", 22: "agree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'BVNL': {
       // Dutch sovereignty: anti-lockdown, freedom-focused, Eurosceptic
-      1: "agree", 2: "neutral", 3: "agree", 4: "neutral", 5: "neutral",
-      6: "agree", 7: "neutral", 8: "agree", 9: "neutral", 10: "neutral",
-      11: "neutral", 12: "neutral", 13: "agree", 14: "neutral", 15: "neutral",
-      16: "neutral", 17: "neutral", 18: "agree", 19: "neutral", 20: "neutral",
-      21: "neutral", 22: "neutral", 23: "neutral", 24: "disagree", 25: "neutral"
+      1: "disagree", 2: "disagree", 3: "disagree", 4: "agree", 5: "neutral",
+      6: "disagree", 7: "agree", 8: "disagree", 9: "agree", 10: "disagree",
+      11: "disagree", 12: "neutral", 13: "agree", 14: "disagree", 15: "disagree",
+      16: "disagree", 17: "agree", 18: "disagree", 19: "disagree", 20: "disagree",
+      21: "neutral", 22: "agree", 23: "disagree", 24: "disagree", 25: "agree"
     },
     'SGP': {
       // Reformed Christian: traditional Christian values, family-focused
