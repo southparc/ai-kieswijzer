@@ -4,8 +4,10 @@ import { AdvicePage } from "@/components/AdvicePage";
 import { QualityDashboard } from "@/components/QualityDashboard";
 import { QuizInterface, Answer } from "@/components/QuizInterface";
 import { ResultsPage } from "@/components/ResultsPage";
+import { DualResultsPage } from "@/components/DualResultsPage";
 import { CoalitionPage } from "@/components/CoalitionPage";
 import { useQuestions } from "@/hooks/useQuestions";
+import { useDualScoring } from "@/hooks/useDualScoring";
 import { calculateResults } from "@/utils/calculateResults";
 import { PartyResult } from "@/types/party";
 import { useParties } from "@/hooks/useParties";
@@ -14,13 +16,18 @@ import { ThemeWeights } from "@/components/ThemeWeightSetup";
 import { supabase } from "@/integrations/supabase/client";
 
 // App state
-type AppState = "landing" | "advice" | "quality" | "quiz" | "results" | "coalition";
+type AppState = "landing" | "advice" | "quality" | "quiz" | "results" | "dual-results" | "coalition";
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>("landing");
   const [quizResults, setQuizResults] = useState<PartyResult[]>([]);
+  const [currentAnswers, setCurrentAnswers] = useState<Record<number, Answer>>({});
+  const [currentThemeWeights, setCurrentThemeWeights] = useState<ThemeWeights>({});
   const { parties, loading: partiesLoading, error: partiesError } = useParties();
   const { questions, loading: questionsLoading, error: questionsError } = useQuestions();
+  
+  // Dual scoring results
+  const dualScoringResults = useDualScoring(currentAnswers, parties, questions, currentThemeWeights);
 
   const handleStart = () => setAppState("advice");
   const handleStartQuiz = () => setAppState("quiz");
@@ -30,10 +37,16 @@ const Index = () => {
   const handleQuizComplete = async (answers: Record<number, Answer>, themeWeights: ThemeWeights) => {
     if (!parties || parties.length === 0 || !questions || questions.length === 0) return;
     
-    // Calculate results
-    const results = calculateResults(answers, parties, questions, themeWeights);
-    setQuizResults(results);
-    setAppState("results");
+    // Store answers and weights for dual scoring
+    setCurrentAnswers(answers);
+    setCurrentThemeWeights(themeWeights);
+    
+    // Calculate legacy results for backward compatibility
+    const legacyResults = calculateResults(answers, parties, questions, themeWeights);
+    setQuizResults(legacyResults);
+    
+    // Show dual results page (new enhanced version)
+    setAppState("dual-results");
 
     // Track quiz completion in database
     try {
@@ -103,6 +116,17 @@ const Index = () => {
 
     case "results":
       return <ResultsPage results={quizResults} onRestart={handleRestartQuiz} onViewCoalition={handleViewCoalition} />;
+
+    case "dual-results":
+      return (
+        <DualResultsPage 
+          results={dualScoringResults.results}
+          onRestart={handleRestartQuiz}
+          onViewCoalition={handleViewCoalition}
+          explanation={dualScoringResults.explanation}
+          hasVotingData={dualScoringResults.hasVotingData}
+        />
+      );
 
     case "coalition":
       return <CoalitionPage results={quizResults} onRestart={handleRestartQuiz} />;
