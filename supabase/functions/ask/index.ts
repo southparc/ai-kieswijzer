@@ -194,7 +194,7 @@ serve(async (req) => {
     if (inferredTheme !== 'algemeen') {
       const { data: themeResults, error: themeError } = await supabase
         .rpc('rag_topk_themed', {
-          q_embedding: qVec,
+          q_embedding: questionEmbedding,
           theme_filter: inferredTheme,
           k: 60
         });
@@ -209,7 +209,7 @@ serve(async (req) => {
     if (ragResults.length < 30) {
       const { data: semanticResults, error: ragError } = await supabase
         .rpc('rag_topk', {
-          q_embedding: qVec,
+          q_embedding: questionEmbedding,
           k: 200 // Much higher to ensure coverage
         });
         
@@ -224,11 +224,6 @@ serve(async (req) => {
     // Deduplicate and rerank results
     ragResults = deduplicateResults(ragResults);
     ragResults = crossEncoderRerank(ragResults, question).slice(0, 100);
-
-    if (ragError) {
-      console.error('Error in RAG search:', ragError);
-      throw ragError;
-    }
 
     console.log('Found RAG results:', ragResults?.length || 0);
 
