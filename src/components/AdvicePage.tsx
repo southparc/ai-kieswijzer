@@ -52,33 +52,54 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
     if (!question.trim()) return;
 
     setLoading(true);
+    
+    // Show chat interface immediately and add user message
+    setResult({ answer: "" }); // This will make the chat interface appear
+    const userMessage = question.trim();
+    setConversationHistory([{ role: 'user', content: userMessage }]);
+    
     try {
+      console.log('Calling ask function with question:', userMessage);
+      
       const { data, error } = await supabase.functions.invoke('ask', {
         body: {
-          question: question,
-          ip: "127.0.0.1" // This will be replaced with actual IP in production
+          question: userMessage,
+          ip: "127.0.0.1"
         }
       });
 
-      if (error) throw error;
+      console.log('Ask function response:', { data, error });
 
-      const resultData = {
-        answer: data.answer || "Geen antwoord beschikbaar."
-      };
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
-      setResult(resultData);
-      
-      // Initialize chat with the first Q&A
+      if (!data || !data.answer) {
+        console.error('No answer in response:', data);
+        throw new Error('Geen antwoord ontvangen van de server');
+      }
+
+      // Add assistant response to chat
       setConversationHistory([
-        { role: 'user', content: question },
-        { role: 'assistant', content: resultData.answer }
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: data.answer }
       ]);
+      
+      setResult({ answer: data.answer });
       
     } catch (error) {
       console.error('Error getting advice:', error);
-      setResult({
-        answer: "Er is een fout opgetreden bij het ophalen van het advies. Probeer het opnieuw."
-      });
+      const errorMessage = error instanceof Error ? error.message : 
+        "Er is een fout opgetreden bij het ophalen van het advies. Probeer het opnieuw.";
+      
+      // Add error message to chat
+      setConversationHistory([
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: errorMessage }
+      ]);
+      
+      setResult({ answer: errorMessage });
     } finally {
       setLoading(false);
     }
