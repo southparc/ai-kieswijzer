@@ -75,18 +75,23 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
         throw error;
       }
 
-      if (!data || !data.answer) {
-        console.error('No answer in response:', data);
+      // Extract answer robustly to handle any response shape
+      const answerText = typeof data === 'string'
+        ? data
+        : (data?.answer ?? data?.message ?? data?.generatedText ?? data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? '');
+
+      if (!answerText || !answerText.trim()) {
+        console.error('No usable answer in response:', data);
         throw new Error('Geen antwoord ontvangen van de server');
       }
 
       // Add assistant response to chat
       setConversationHistory([
         { role: 'user', content: userMessage },
-        { role: 'assistant', content: data.answer }
+        { role: 'assistant', content: answerText }
       ]);
       
-      setResult({ answer: data.answer });
+      setResult({ answer: answerText });
       
     } catch (error) {
       console.error('Error getting advice:', error);
