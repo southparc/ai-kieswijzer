@@ -59,26 +59,29 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
     setConversationHistory([{ role: 'user', content: userMessage }]);
     
     try {
-      console.log('Calling ask function with question:', userMessage);
+      console.log('Using fast chat function with question:', userMessage);
       
-      const { data, error } = await supabase.functions.invoke('ask', {
+      const { data, error } = await supabase.functions.invoke('chat', {
         body: {
-          question: userMessage,
-          ip: "127.0.0.1"
+          message: userMessage,
+          conversationHistory: []
         }
       });
 
-      console.log('Ask function response:', { data, error });
+      console.log('Chat function response:', { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
         throw error;
       }
 
-      // Extract answer robustly to handle any response shape
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
       const answerText = typeof data === 'string'
         ? data
-        : (data?.answer ?? data?.message ?? data?.generatedText ?? data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? '');
+        : (data?.message ?? data?.answer ?? data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? '');
 
       if (!answerText || !answerText.trim()) {
         console.error('No usable answer in response:', data);
@@ -94,43 +97,15 @@ export const AdvicePage = ({ onBack }: AdvicePageProps) => {
       setResult({ answer: answerText });
       
     } catch (error) {
-      console.error('Error getting advice, falling back to chat:', error);
+      console.error('Error getting chat response:', error);
+      const errorMessage = error instanceof Error ? error.message :
+        'Er is een fout opgetreden bij het ophalen van het advies. Probeer het opnieuw.';
 
-      // Fallback to chat function to ensure the user gets an immediate answer
-      try {
-        const { data: chatData, error: chatError } = await supabase.functions.invoke('chat', {
-          body: {
-            message: userMessage,
-            conversationHistory: []
-          }
-        });
-
-        if (chatError) throw chatError;
-
-        const chatAnswer = typeof chatData === 'string'
-          ? chatData
-          : (chatData?.message ?? chatData?.choices?.[0]?.message?.content ?? chatData?.choices?.[0]?.text ?? '');
-
-        if (!chatAnswer || !chatAnswer.trim()) {
-          throw new Error('Geen antwoord ontvangen van de server');
-        }
-
-        setConversationHistory([
-          { role: 'user', content: userMessage },
-          { role: 'assistant', content: chatAnswer }
-        ]);
-        setResult({ answer: chatAnswer });
-      } catch (fallbackErr) {
-        console.error('Chat fallback also failed:', fallbackErr);
-        const errorMessage = fallbackErr instanceof Error ? fallbackErr.message :
-          'Er is een fout opgetreden bij het ophalen van het advies. Probeer het opnieuw.';
-
-        setConversationHistory([
-          { role: 'user', content: userMessage },
-          { role: 'assistant', content: errorMessage }
-        ]);
-        setResult({ answer: errorMessage });
-      }
+      setConversationHistory([
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: errorMessage }
+      ]);
+      setResult({ answer: errorMessage });
     } finally {
       setLoading(false);
     }
