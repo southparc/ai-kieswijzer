@@ -86,7 +86,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, planning 1 okt klaar.
+              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, nog niet klaar, planning 1 okt.
             </p>
           </Card>
         </div>
