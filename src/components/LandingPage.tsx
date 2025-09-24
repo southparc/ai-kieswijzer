@@ -51,7 +51,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
                  <span>versie: 0.6 diverse RAG verbeteringen, oa aanpasbare prompts <br />
-                 Te doen: prompts optimaliseren tegen hallucinaties, layout verbeteren</span>
+                       hierna: prompts optimaliseren tegen hallucinaties, layout verbeteren</span>
                </div>
             </div>
             <div className="relative">
@@ -69,7 +69,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
             <h3 className="text-xl font-semibold mb-2">Doel</h3>
             <p className="text-muted-foreground">
               Transparante vergelijking van partijstandpunten via AI-analyse van 
-              officiële programma's en documenten.
+              officiële programma's en stemgedrag.
             </p>
           </Card>
           
@@ -78,7 +78,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
             <h3 className="text-xl font-semibold mb-2">Transparantie</h3>
             <p className="text-muted-foreground">
               Alle bronnen worden getoond. Antwoorden zijn gebaseerd op 
-              verifieerbare partijdocumenten.
+              verifieerbare verkiezingprgramma's.
             </p>
           </Card>
           
@@ -86,8 +86,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Database bijgewerkt op 13 september 2025 met de meest recente 
-              partijprogramma's.
+              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, .
             </p>
           </Card>
         </div>
