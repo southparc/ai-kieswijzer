@@ -50,7 +50,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
               
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                 <span>versie: 0.6 betere RAG, datakwaliteit optie, aanpasbare prompts <br />
+                 <span>versie: 0.6 diverse RAG verbeteringen, oa aanpasbare prompts <br />
                        hierna: prompts optimaliseren tegen hallucinaties, layout verbeteren</span>
                </div>
             </div>
@@ -86,7 +86,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, .
+              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, planning is 1 okt klaar.
             </p>
           </Card>
         </div>
