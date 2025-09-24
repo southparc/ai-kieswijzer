@@ -45,6 +45,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     description: ""
   });
 
+  // Prompts state
+  const [prompts, setPrompts] = useState<any[]>([]);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [editingPrompt, setEditingPrompt] = useState<number | null>(null);
+
   // Auth effect
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -60,10 +65,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch questions
+  // Fetch questions and prompts
   useEffect(() => {
     if (user && ALLOWED_EMAILS.includes(user.email!)) {
       fetchQuestions();
+      fetchPrompts();
     }
   }, [user]);
 
@@ -86,6 +92,28 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       });
     } finally {
       setQuestionsLoading(false);
+    }
+  };
+
+  const fetchPrompts = async () => {
+    setPromptsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('chat_prompts')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setPrompts(data || []);
+    } catch (error) {
+      console.error('Error fetching prompts:', error);
+      toast({
+        title: "Fout",
+        description: "Kon prompts niet laden",
+        variant: "destructive"
+      });
+    } finally {
+      setPromptsLoading(false);
     }
   };
 
@@ -395,6 +423,33 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
   };
 
+  // Prompt management functions
+  const updatePrompt = async (id: number, updates: { content: string; description?: string }) => {
+    try {
+      const { error } = await supabase
+        .from('chat_prompts')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Succes",
+        description: "Prompt bijgewerkt"
+      });
+      
+      fetchPrompts();
+      setEditingPrompt(null);
+    } catch (error) {
+      console.error('Error updating prompt:', error);
+      toast({
+        title: "Fout",
+        description: "Kon prompt niet bijwerken",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
@@ -552,8 +607,9 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         </div>
 
         <Tabs defaultValue="questions" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="questions">Quiz Vragen</TabsTrigger>
+            <TabsTrigger value="prompts">AI Prompts</TabsTrigger>
             <TabsTrigger value="documents">Documenten</TabsTrigger>
           </TabsList>
           
@@ -642,6 +698,63 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
+                          </div>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prompts" className="space-y-6">
+            {/* Prompts Management */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">AI Chat Prompts ({prompts.length})</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Hier kun je de prompts aanpassen die de AI gebruikt. Dit bevat informatie over lijsttrekkers en gedragsregels.
+              </p>
+              {promptsLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Laden...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {prompts.map((prompt) => (
+                    <Card key={prompt.id} className="p-4">
+                      {editingPrompt === prompt.id ? (
+                        <EditPromptForm
+                          prompt={prompt}
+                          onSave={(updates) => updatePrompt(prompt.id, updates)}
+                          onCancel={() => setEditingPrompt(null)}
+                        />
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-medium text-muted-foreground">#{prompt.id}</span>
+                                <span className="text-sm bg-muted px-2 py-1 rounded">{prompt.name}</span>
+                                <span className={`text-sm px-2 py-1 rounded ${prompt.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {prompt.active ? 'Actief' : 'Inactief'}
+                                </span>
+                              </div>
+                              {prompt.description && (
+                                <p className="text-sm text-muted-foreground mb-2">{prompt.description}</p>
+                              )}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingPrompt(prompt.id)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="bg-muted p-3 rounded text-sm font-mono max-h-40 overflow-y-auto">
+                            <pre className="whitespace-pre-wrap">{prompt.content}</pre>
                           </div>
                         </div>
                       )}
@@ -896,6 +1009,55 @@ const EditQuestionForm = ({ question, onSave, onCancel }: EditQuestionFormProps)
           onChange={(e) => setFormData(prev => ({ ...prev, active: e.target.checked }))}
         />
         <Label htmlFor="active">Actief</Label>
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={handleSave} className="gap-2">
+          <Save className="h-4 w-4" />
+          Opslaan
+        </Button>
+        <Button variant="outline" onClick={onCancel}>
+          Annuleren
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Edit Prompt Form Component
+interface EditPromptFormProps {
+  prompt: any;
+  onSave: (updates: { content: string; description?: string }) => void;
+  onCancel: () => void;
+}
+
+const EditPromptForm = ({ prompt, onSave, onCancel }: EditPromptFormProps) => {
+  const [formData, setFormData] = useState({
+    content: prompt.content,
+    description: prompt.description || ""
+  });
+
+  const handleSave = () => {
+    onSave(formData);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Beschrijving</Label>
+        <Input
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Korte beschrijving van deze prompt"
+        />
+      </div>
+      <div>
+        <Label>Prompt Inhoud</Label>
+        <Textarea
+          value={formData.content}
+          onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+          className="min-h-[300px] font-mono text-sm"
+          placeholder="Prompt tekst..."
+        />
       </div>
       <div className="flex gap-2">
         <Button onClick={handleSave} className="gap-2">

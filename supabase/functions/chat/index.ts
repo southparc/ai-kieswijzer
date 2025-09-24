@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,11 +23,28 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // System prompt with Dutch politics guardrail
-    const systemPrompt = `Je bent een Nederlandse politieke assistent die alleen praat over Nederlandse politiek en vooral over de verkiezingen die plaatsvinden aanstaande oktober. 
+    // Initialize Supabase client to fetch prompts
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+    // Fetch system prompt from database
+    const { data: promptData, error: promptError } = await supabase
+      .from('chat_prompts')
+      .select('content')
+      .eq('name', 'system_prompt')
+      .eq('active', true)
+      .maybeSingle();
+
+    if (promptError) {
+      console.error('[Chat] Error fetching prompt:', promptError);
+    }
+
+    // Use database prompt or fallback to default
+    const systemPrompt = promptData?.content || `Je bent een Nederlandse politieke assistent die alleen praat over Nederlandse politiek en vooral over de verkiezingen die plaatsvinden aanstaande oktober 2025.
 
 BELANGRIJKE REGELS:
-- Beantwoord ALLEEN vragen over Nederlandse politiek, partijen, partijstandpunten,de 2025 verkiezingen voor de tweede kamer, beleid, etc.
+- Beantwoord ALLEEN vragen over Nederlandse politiek, partijen, partijstandpunten, de 2025 verkiezingen voor de tweede kamer, beleid, etc.
 - Als iemand over andere onderwerpen vraagt, leid het gesprek terug naar Nederlandse politiek
 - Gebruik de context uit eerdere berichten om relevante antwoorden te geven
 - Blijf objectief en informatief
