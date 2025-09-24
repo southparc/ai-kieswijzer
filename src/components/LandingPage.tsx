@@ -26,8 +26,8 @@ export const LandingPage = ({
                   AI Kieswijzer
                 </span>
               </h1>
-               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer dmv ChatGPT en alle programmas'. Eind september volledig up-to-data, nu nog in test.
-Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag. Coalitiekansen inschatting komt er aan. .</p>
+               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer obv ChatGPT en alle programma's. 1 oktober volledig up-to-data, nu nog in test.
+Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag, Coalitiekansen inschatting in de maak.  .</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" variant="dutch-red" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
                   AI Advies
@@ -86,7 +86,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, planning is 1 okt klaar.
+              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, .
             </p>
           </Card>
         </div>
