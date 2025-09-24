@@ -26,8 +26,8 @@ export const LandingPage = ({
                   AI Kieswijzer
                 </span>
               </h1>
-               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer obv ChatGPT en alle programma's. 1 oktober volledig up-to-data, nu nog in test.
-Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag, Coalitiekansen inschatting in de maak.  .</p>
+               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer dmv ChatGPT en alle programmas'. Eind september volledig up-to-data, nu nog in test.
+Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag. Coalitiekansen inschatting komt er aan. .</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" variant="dutch-red" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
                   AI Advies
@@ -36,7 +36,7 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
                   Stemwijzer Quiz
                 </Button>
                 <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
-                  Data kwaliteit
+                  Datakwaliteit
                 </Button>
               </div>
               
