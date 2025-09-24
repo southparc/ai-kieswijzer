@@ -50,7 +50,8 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
               
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                 <span>v0.55 chat verbeterd, stemgedrag toegevoegd en coalitie berekening aangpast  </span>
+                 <span>v0.6 diverse verbeteringen, oa aanpasbare prompts <br />
+                 ToDo: prompts optimaliseren tegen hallucinaties, layout verbeteren</span>
                </div>
             </div>
             <div className="relative">
