@@ -274,10 +274,10 @@ serve(async (req) => {
           partyContent.set(normalizedParty, {
             content: chunk.content,
             page: chunk.page,
-            party: chunk.documents.party,
+            party: Array.isArray((chunk as any).documents) ? (chunk as any).documents[0]?.party : (chunk as any).documents?.party,
             party_norm: normalizedParty,
-            title: chunk.documents.title,
-            url: chunk.documents.url
+            title: Array.isArray((chunk as any).documents) ? (chunk as any).documents[0]?.title : (chunk as any).documents?.title,
+            url: Array.isArray((chunk as any).documents) ? (chunk as any).documents[0]?.url : (chunk as any).documents?.url
           });
         } else {
           console.log(`No real content found for party (normalized): ${normalizedParty} | originals tried: ${originals.join(', ')}`);
@@ -421,7 +421,7 @@ ${enhancedContext}`
     return new Response(
       JSON.stringify({ 
         error: 'Er is een fout opgetreden bij het verwerken van je vraag.',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       }),
       {
         status: 500,

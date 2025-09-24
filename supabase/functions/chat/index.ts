@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,25 +22,8 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Initialize Supabase client to fetch prompts
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-
-    // Fetch system prompt from database
-    const { data: promptData, error: promptError } = await supabase
-      .from('chat_prompts')
-      .select('content')
-      .eq('name', 'system_prompt')
-      .eq('active', true)
-      .maybeSingle();
-
-    if (promptError) {
-      console.error('[Chat] Error fetching prompt:', promptError);
-    }
-
-    // Use database prompt or fallback to default
-    const systemPrompt = promptData?.content || `Je bent een Nederlandse politieke assistent die alleen praat over Nederlandse politiek en vooral over de verkiezingen die plaatsvinden aanstaande oktober 2025.
+    // Fetch system prompt from database using direct fetch
+    let systemPrompt = `Je bent een Nederlandse politieke assistent die alleen praat over Nederlandse politiek en vooral over de verkiezingen die plaatsvinden aanstaande oktober 2025.
 
 BELANGRIJKE REGELS:
 - Beantwoord ALLEEN vragen over Nederlandse politiek, partijen, partijstandpunten, de 2025 verkiezingen voor de tweede kamer, beleid, etc.
@@ -51,7 +33,52 @@ BELANGRIJKE REGELS:
 - Verwijs naar concrete partijstandpunten waar mogelijk
 - Antwoord in het Nederlands
 
+ACTUELE LIJSTTREKKERS 2025:
+- VVD: Dilan Yeşilgöz
+- PVV: Geert Wilders
+- CDA: Henri Bontenbal
+- D66: Rob Jetten
+- GL-PvdA: Frans Timmermans
+- SP: Jimmy Dijk
+- PvdD: Esther Ouwehand
+- ChristenUnie: Mirjam Bikker
+- SGP: Chris Stoffer
+- DENK: Stephan van Baarle
+- FVD: Thierry Baudet
+- JA21: Joost Eerdmans
+- Volt: Laurens Dassen
+- BIJ1: Sylvana Simons
+- 50PLUS: Liane den Haan
+- BBB: Caroline van der Plas
+
 Als iemand vraagt over onderwerpen buiten de Nederlandse politiek, zeg dan: "Ik kan alleen vragen beantwoorden over Nederlandse politiek. Heb je vragen over partijen, verkiezingen of politiek beleid in Nederland?"`;
+
+    // Try to fetch updated prompt from database
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (supabaseUrl && supabaseServiceKey) {
+        const response = await fetch(`${supabaseUrl}/rest/v1/chat_prompts?name=eq.system_prompt&active=eq.true&select=content`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'apikey': supabaseServiceKey,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0 && data[0].content) {
+            systemPrompt = data[0].content;
+            console.log('[Chat] Using database prompt');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[Chat] Error fetching prompt from database:', error);
+      // Continue with default prompt
+    }
 
     // Build messages array with conversation history
     const messages = [
@@ -97,7 +124,7 @@ Als iemand vraagt over onderwerpen buiten de Nederlandse politiek, zeg dan: "Ik 
   } catch (error) {
     console.error('[Chat] Error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       success: false 
     }), {
       status: 500,

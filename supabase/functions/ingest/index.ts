@@ -49,6 +49,7 @@ serve(async (req) => {
 // Download and process the real PDF: extract text, chunk and embed
 // 1) Fetch PDF
 let fullText = '';
+let pageTexts: { text: string; sections: string[] }[] = [];
 try {
   const pdfRes = await fetch(url);
   if (!pdfRes.ok) throw new Error(`Failed to fetch PDF (${pdfRes.status})`);
@@ -83,10 +84,9 @@ try {
     ];
     
     return headerPatterns.some(pattern => pattern.test(normalized)) ||
-           (fontSize && fontSize > 12);  // Larger font likely header
+           (fontSize ? fontSize > 12 : false);  // Larger font likely header
   }
 
-  const pageTexts: { text: string; sections: string[] }[] = [];
   let currentSections: string[] = [];
   
   for (let p = 1; p <= document.numPages; p++) {
@@ -260,7 +260,7 @@ console.log(`Document processed successfully with ${rows.length} chunks`);
     return new Response(
       JSON.stringify({ 
         error: 'Er is een fout opgetreden bij het verwerken van het document.',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       }),
       {
         status: 500,
