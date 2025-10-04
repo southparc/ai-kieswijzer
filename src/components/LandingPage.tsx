@@ -53,8 +53,8 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
               
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                 <span>versie: 0.61 diverse RAG- en prompts aanpassing, datakwaliteit button<br />
-                       hierna: prompts en vragen optimaliseren, layout verbeteren</span>
+                 <span>versie: 0.8 prompt aanpassing, vragen neutraler<br />
+                       hierna: layout verbeteren</span>
                </div>
             </div>
             <div className="relative">
