@@ -89,7 +89,7 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, .
+              Bijgewerkt: prompts 4 okt, vragen: 4 okt, programma's: 13 sept, layout: 3 okt, .
             </p>
           </Card>
         </div>
