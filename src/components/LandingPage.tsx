@@ -35,9 +35,7 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
                 <Button size="lg" variant="dutch-blue" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStartQuiz}>
                   Stemwijzer Quiz
                 </Button>
-                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
-                  Data kwaliteit
-                </Button>
+               
               </div>
               
               {/* Usage Counter */}
@@ -89,9 +87,12 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkte onderdelen: GPT prompts: 4 okt, prgramma's: 13 sept, vragen: 4 okt, layout 23 sept, stemmingen 2 okt.
+              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, .
             </p>
           </Card>
+           <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
+                  Data kwaliteit
+                </Button>
         </div>
       </div>
     </div>;
