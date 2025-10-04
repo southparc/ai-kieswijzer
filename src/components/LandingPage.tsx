@@ -30,7 +30,7 @@ export const LandingPage = ({
 Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag. Coalitiekansen inschatting zijn nog vrij onbetrouwbaar. .</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" variant="dutch-red" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
-                  AI Advies
+                  AI CHAT
                 </Button>
                 <Button size="lg" variant="dutch-blue" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStartQuiz}>
                   Stemwijzer Quiz
@@ -89,10 +89,14 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkt: prompts 24 sept, database op 13 sept, layout 23 sept, .
+              Bijgewerkt: prompts 3 okt, database op 13 sept, vragen 4 sept, layout 4 okt, .
             </p>
           </Card>
-        </div>
+           <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
+                  Data kwaliteit
+                </Button>
+          
+                  </div>
       </div>
     </div>;
 };
