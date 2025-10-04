@@ -51,8 +51,7 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
               
                {/* Version */}
                <div className="flex items-center justify-center sm:justify-start text-muted-foreground text-sm sm:text-base">
-                 <span>versie: 0.8 prompt aanpassing, vragen neutraler<br />
-                       hierna: layout verbeteren</span>
+                
                </div>
             </div>
             <div className="relative">
@@ -87,12 +86,13 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
             <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Laatste Update</h3>
             <p className="text-muted-foreground">
-              Bijgewerkte onderdelen:  stemwijzervragen: 4 okt, prompts 4 okt, database: 13 sept, chatlayout 2 okt, .
+              Bijgewerkte onderdelen:  stemwijzervragen: 4 okt, prompts 4 okt, database: 13 sept, chatlayout 2 okt.
             </p>
           </Card>
            <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
                   Data kwaliteit
                 </Button>
+          <span>versie: 0.81 prompt aanpassing, vragen neutraler, doorlopend: layout verbeteren – vragen: diederik@southparc.nl</span>
         </div>
       </div>
     </div>;
