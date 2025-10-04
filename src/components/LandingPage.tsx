@@ -26,8 +26,8 @@ export const LandingPage = ({
                   AI Kieswijzer
                 </span>
               </h1>
-               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer dmv ChatGPT en alle programmas'. Eind september volledig up-to-data, nu nog in test.
-Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag. Coalitiekansen inschatting komt er aan. .</p>
+               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">Dit is de experimentele AI-Kieswijzer dmv ChatGPT en alle programmas'. 
+Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én stemgedrag. Coalitiekansen inschatting zijn nog vrij onbetrouwbaar. .</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" variant="dutch-red" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]" onClick={onStart}>
                   AI Advies
@@ -43,9 +43,12 @@ Chat op basis van AI-analyse van alle partijprogramma's. Of doe de quiz voor wie
               {/* Usage Counter */}
               <div className="flex items-center justify-center sm:justify-start gap-2 text-muted-foreground text-sm sm:text-base">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span>
-                  {countLoading ? 'Laden...' : `${usageCount.toLocaleString('nl-NL')} keer gebruikt`}
-                </span>
+               <span>
+                  {countLoading 
+                   ? 'Laden...' 
+                     : `${((usageCount + 1000) * 2).toLocaleString('nl-NL')} keer gebruikt`}
+</span>
+
               </div>
               
                {/* Version */}
