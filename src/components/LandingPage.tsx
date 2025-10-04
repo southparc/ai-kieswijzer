@@ -92,7 +92,7 @@ Chat met AI over alle partijprogramma's. Of doe de quiz voor wie het beste bij j
            <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px] bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-300" onClick={onViewQuality}>
                   Data kwaliteit
                 </Button>
-          <span>versie: 0.81 prompt aanpassing, vragen neutraler, doorlopend: layout verbeteren – vragen: diederik@southparc.nl</span>
+          <span>versie: 0.81 – vragen: diederik@southparc.nl</span>
         </div>
       </div>
     </div>;
