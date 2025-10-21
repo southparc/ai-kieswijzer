@@ -126,7 +126,7 @@ const Index = () => {
       );
 
     case "results":
-      return <ResultsPage results={quizResults} onRestart={handleRestartQuiz} onViewCoalition={handleViewCoalition} />;
+      return <ResultsPage results={quizResults} onRestart={handleRestartQuiz} onViewCoalition={handleViewCoalition} questions={questions} />;
 
     case "dual-results":
       return (

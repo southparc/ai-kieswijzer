@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RotateCcw, Share2, Download, Trophy, Info, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Answer } from "./QuizInterface";
+import { Answer, Question } from "./QuizInterface";
 import { PartyResult, QuestionBreakdown } from "@/types/party";
 import { questions } from "@/data/questions";
 
@@ -12,6 +12,7 @@ interface ResultsPageProps {
   results: PartyResult[];
   onRestart: () => void;
   onViewCoalition: () => void;
+  questions: Question[];
 }
 
 const BreakdownDialog = ({ 
@@ -69,6 +70,12 @@ const BreakdownDialog = ({
                   <p className="font-semibold">
                     {question?.statement}
                   </p>
+                  {question?.description && (
+                    <div className="flex gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded-md mt-2">
+                      <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>{question.description}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <div>
                       <span className="text-muted-foreground">Jij: </span>
@@ -93,7 +100,7 @@ const BreakdownDialog = ({
   );
 };
 
-export const ResultsPage = ({ results, onRestart, onViewCoalition }: ResultsPageProps) => {
+export const ResultsPage = ({ results, onRestart, onViewCoalition, questions }: ResultsPageProps) => {
   const topMatch = results[0];
   const sortedResults = [...results].sort((a, b) => b.percentage - a.percentage);
 
