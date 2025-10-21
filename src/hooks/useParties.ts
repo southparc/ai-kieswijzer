@@ -47,6 +47,20 @@ const PARTY_DESCRIPTIONS: Record<string, string> = {
   'Vrij Verbond': 'Partij die zich inzet voor vrijheid, soevereiniteit en democratische waarden.'
 };
 
+// CPB analysis URLs for parties (Keuzes in Kaart 2027-2030)
+const CPB_ANALYSIS_URLS: Record<string, string> = {
+  'BBB': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-BBB-Keuzes-in-Kaart-2027-2030.pdf',
+  'CDA': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-CDA-Keuzes-in-Kaart-2027-2030.pdf',
+  'ChristenUnie': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-ChristenUnie-Keuzes-in-Kaart-2027-2030.pdf',
+  'D66': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-D66-Keuzes-in-Kaart-2027-2030.pdf',
+  'GroenLinks-PvdA': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-GroenLinks-PvdA-Keuzes-in-Kaart-2027-2030.pdf',
+  'NSC': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-NSC-Keuzes-in-Kaart-2027-2030.pdf',
+  'PVV': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-PVV-Keuzes-in-Kaart-2027-2030.pdf',
+  'SGP': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-SGP-Keuzes-in-Kaart-2027-2030.pdf',
+  'SP': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-SP-Keuzes-in-Kaart-2027-2030.pdf',
+  'VVD': 'https://www.cpb.nl/sites/default/files/omnidownload/CPB-analyse-VVD-Keuzes-in-Kaart-2027-2030.pdf',
+};
+
 // Canonical list to guarantee 16 parties in the quiz (top Dutch parties)
 const DEFAULT_PARTY_NAMES = [
   'VVD','D66','PVV','CDA','GroenLinks-PvdA','SP','FvD','Partij voor de Dieren',
@@ -261,7 +275,8 @@ export const useParties = () => {
           name: dbParty.party,
           color: PARTY_COLORS[dbParty.party] || PARTY_COLORS.default,
           description: PARTY_DESCRIPTIONS[dbParty.party] || `${dbParty.party} - Nederlandse politieke partij`,
-          positions: generateDefaultPositions(dbParty.party)
+          positions: generateDefaultPositions(dbParty.party),
+          cpbAnalysisUrl: CPB_ANALYSIS_URLS[dbParty.party]
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 

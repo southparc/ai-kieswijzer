@@ -4,6 +4,7 @@ export interface Party {
   color: string;
   description: string;
   positions: Record<number, "agree" | "neutral" | "disagree">;
+  cpbAnalysisUrl?: string;
 }
 
 export interface DatabaseParty {

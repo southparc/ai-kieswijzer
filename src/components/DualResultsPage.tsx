@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Share2, RotateCcw, Users, FileText, Vote, Info, AlertTriangle, CheckCircle, X, Minus } from "lucide-react";
+import { Share2, RotateCcw, Users, FileText, Vote, Info, AlertTriangle, CheckCircle, X, Minus, ExternalLink } from "lucide-react";
 import type { DualPartyResult } from "@/types/dualScoring";
 
 interface DualResultsPageProps {
@@ -258,6 +258,18 @@ export const DualResultsPage: React.FC<DualResultsPageProps> = ({
               <BreakdownDialog party={topResult} type="program" />
               <BreakdownDialog party={topResult} type="votes" />
             </div>
+            
+            {topResult.party.cpbAnalysisUrl && (
+              <a
+                href={topResult.party.cpbAnalysisUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Bekijk CPB economische analyse
+              </a>
+            )}
           </CardContent>
         </Card>
 
@@ -325,6 +337,18 @@ export const DualResultsPage: React.FC<DualResultsPageProps> = ({
                     <span className="text-red-600">Lage betrouwbaarheid</span>
                   )}
                 </div>
+                
+                {result.party.cpbAnalysisUrl && (
+                  <a
+                    href={result.party.cpbAnalysisUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Bekijk CPB economische analyse
+                  </a>
+                )}
               </CardContent>
             </Card>
           ))}

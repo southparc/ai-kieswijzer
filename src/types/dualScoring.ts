@@ -30,6 +30,7 @@ export interface PartyData {
   description: string;
   program: PartyProgramStance[];
   votes: PartyVoteStance[];
+  cpbAnalysisUrl?: string;
 }
 
 export interface UserAnswer {

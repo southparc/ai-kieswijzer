@@ -25,7 +25,7 @@ export const LandingPage = ({ onStart, onStartQuiz, onViewQuality }: LandingPage
               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">
                 Dit is de experimentele AI-Kieswijzer dmv ChatGPT en alle programmas'. Chat met AI over alle
                 partijprogramma's. Of doe de quiz voor wie het beste bij je past - met uitleg op basis van programma én
-                stemgedrag. Coalitiekansen inschatting zijn nog vrij onbetrouwbaar. .
+                stemgedrag. Voor veel partijen zijn de officiële CPB doorrekeningen van hun economische programma's beschikbaar.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button

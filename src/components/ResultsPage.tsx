@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RotateCcw, Share2, Download, Trophy, Info, Users } from "lucide-react";
+import { RotateCcw, Share2, Download, Trophy, Info, Users, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Answer, Question } from "./QuizInterface";
 import { PartyResult, QuestionBreakdown } from "@/types/party";
@@ -256,6 +256,18 @@ export const ResultsPage = ({ results, onRestart, onViewCoalition, questions }: 
                       />
                     </Dialog>
                   </div>
+                  
+                  {result.party.cpbAnalysisUrl && (
+                    <a
+                      href={result.party.cpbAnalysisUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Bekijk CPB economische analyse
+                    </a>
+                  )}
                 </div>
               </div>
             </Card>
