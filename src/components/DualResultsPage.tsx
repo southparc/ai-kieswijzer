@@ -350,13 +350,6 @@ export const DualResultsPage: React.FC<DualResultsPageProps> = ({
             Opnieuw doen
           </Button>
           
-          {onViewCoalition && (
-            <Button onClick={onViewCoalition} variant="outline" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Coalitiekansen
-            </Button>
-          )}
-          
           <Button onClick={handleShare} variant="outline" className="flex items-center gap-2">
             <Share2 className="w-4 h-4" />
             Delen

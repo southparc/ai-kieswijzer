@@ -275,16 +275,6 @@ export const ResultsPage = ({ results, onRestart, onViewCoalition, questions }: 
           </Button>
           
           <Button
-            onClick={onViewCoalition}
-            variant="default"
-            size="lg"
-            className="gap-2 flex-1"
-          >
-            <Users className="h-4 w-4" />
-            Coalitiekansen
-          </Button>
-          
-          <Button
             variant="outline"
             size="lg"
             className="gap-2 flex-1"
