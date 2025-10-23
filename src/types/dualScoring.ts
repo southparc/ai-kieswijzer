@@ -2,6 +2,36 @@
 
 export type Pos = -1 | 0 | 1;
 export type Weight = 1 | 2 | 3;
+export type StanceSource = 'manual' | 'ai' | 'fused';
+
+// AI classification signal for enhanced scoring
+export interface AiSignal {
+  stance: Pos;
+  confidence: number;
+  sourceDoc?: string;
+  page?: number;
+}
+
+// Enhanced question/answer item for v2 scoring
+export interface QAItem {
+  questionId: string;
+  topicPercentage: number;
+  importance?: number;
+  userPos: Pos;
+  partyPos?: Pos | null;
+  ai?: AiSignal | null;
+}
+
+// Enhanced scoring options for v2
+export interface ScoreOptions {
+  a?: number;
+  b?: number;
+  lambda?: number;
+  aiFuseEnabled?: boolean;
+  aiMinConf?: number;
+  featureSoftConflict?: boolean;
+  softConflictFloor?: number;
+}
 
 export interface Statement {
   id: string;

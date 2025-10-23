@@ -6,6 +6,11 @@ import type { ThemeWeights } from '@/components/ThemeWeightSetup';
 import type { PartyData, UserAnswer, DualPartyResult, Pos } from '@/types/dualScoring';
 import { calculateAllDualScores, convertLegacyAnswers } from '@/utils/dualScoreCalculator';
 import { getPartyVotingBehavior } from '@/data/votingBehavior';
+import { scoreParty } from '@/utils/scoringEnhanced';
+import { mapToQAItems, mapScoreToBreakdown } from '@/utils/scoringAdapter';
+
+// Feature flag for enhanced scoring v2
+const USE_ENHANCED_SCORING = false;
 
 /**
  * Convert legacy party data to dual scoring format
@@ -49,16 +54,66 @@ export function useDualScoring(
       return [];
     }
 
-    // Convert legacy answers to dual scoring format
+    if (USE_ENHANCED_SCORING) {
+      // Enhanced scoring v2 with sigmoid curve + normalization
+      const results: DualPartyResult[] = parties.map(party => {
+        const qaItems = mapToQAItems(answers, questions, themeWeights, party);
+        
+        const programScore = scoreParty(qaItems, {
+          a: 0.28,
+          b: 0.55,
+          lambda: 0.14,
+          featureSoftConflict: true,
+          softConflictFloor: 0.12
+        });
+
+        const programBreakdown = mapScoreToBreakdown(programScore);
+
+        // Voting behavior (using legacy calculation for now)
+        const votingBehavior = getPartyVotingBehavior(party.name);
+        const dualParty = convertPartyToDualFormat(party);
+        const userAnswers = convertLegacyAnswers(answers, questions);
+        
+        // For voting, we still use legacy for now (can be migrated later)
+        const votesBreakdown = {
+          score: 0,
+          rawScore: 0,
+          coverage: 0,
+          penalty: 0,
+          matches: 0,
+          conflicts: 0,
+          neutralAlign: 0,
+          partialAlign: 0,
+          answered: votingBehavior.length
+        };
+
+        const combined = programBreakdown.score * 0.7 + votesBreakdown.score * 0.3;
+
+        return {
+          party: dualParty,
+          program: programBreakdown,
+          votes: votesBreakdown,
+          combined,
+          hasLimitedVotingData: votingBehavior.length < 5
+        };
+      });
+
+      // Sort by combined score, then strongMatches, then coverage
+      return results.sort((a, b) => {
+        if (b.combined !== a.combined) return b.combined - a.combined;
+        if (b.program.matches !== a.program.matches) return b.program.matches - a.program.matches;
+        return b.program.coverage - a.program.coverage;
+      });
+    }
+
+    // Legacy scoring v1 (fallback)
     const userAnswers: UserAnswer[] = convertLegacyAnswers(answers, questions);
     
-    // Apply theme weights to user answers
     const weightedUserAnswers: UserAnswer[] = userAnswers.map(answer => {
       const question = questions.find(q => q.id.toString() === answer.statementId);
       if (!question) return answer;
       
       const categoryWeight = themeWeights[question.category as keyof ThemeWeights] || 100;
-      // Convert percentage weight (0-100) to multiplier (1-3)
       const weight = Math.max(1, Math.min(3, Math.round(categoryWeight / 33.33))) as 1 | 2 | 3;
       
       return {
@@ -67,10 +122,8 @@ export function useDualScoring(
       };
     });
 
-    // Convert parties to dual scoring format
     const dualParties: PartyData[] = parties.map(convertPartyToDualFormat);
 
-    // Calculate dual scores
     return calculateAllDualScores(dualParties, weightedUserAnswers);
   }, [answers, parties, questions, themeWeights]);
 
